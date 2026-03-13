@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uprint — Universal Print CLI</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --accent: #58a6ff;
+            --green: #3fb950;
+            --orange: #d29922;
+            --red: #f85149;
+            --purple: #bc8cff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        /* Hero */
+        .hero { text-align: center; padding: 80px 0 60px; }
+        .hero-emoji { font-size: 64px; margin-bottom: 16px; }
+        .hero h1 {
+            font-size: 48px; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+        .hero .tagline { font-size: 20px; color: var(--muted); max-width: 600px; margin: 0 auto 32px; }
+        .badge {
+            display: inline-block; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 6px 16px; font-size: 14px; color: var(--green); margin: 4px;
+        }
+
+        /* Story */
+        .story {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 40px; margin: 40px 0;
+        }
+        .story h2 { font-size: 24px; margin-bottom: 16px; color: var(--accent); }
+        .story p { color: var(--muted); margin-bottom: 12px; }
+        .story .highlight { color: var(--text); font-weight: 600; }
+        .story-flow {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin: 32px 0 16px; flex-wrap: wrap;
+        }
+        .flow-step {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 140px;
+        }
+        .flow-step .emoji { font-size: 28px; display: block; margin-bottom: 6px; }
+        .flow-step .label { font-size: 13px; color: var(--muted); }
+        .flow-arrow { color: var(--accent); font-size: 24px; }
+
+        /* Comparison */
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 40px 0; }
+        @media (max-width: 640px) { .comparison { grid-template-columns: 1fr; } }
+        .compare-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 32px;
+        }
+        .compare-card h3 { font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .compare-card.before h3 { color: var(--red); }
+        .compare-card.after h3 { color: var(--green); }
+        .compare-card ul { list-style: none; padding: 0; }
+        .compare-card li {
+            padding: 8px 0; color: var(--muted); border-bottom: 1px solid var(--border); font-size: 14px;
+        }
+        .compare-card li:last-child { border-bottom: none; }
+        .compare-card li .time {
+            float: right; font-weight: 600; font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .compare-card.before li .time { color: var(--red); }
+        .compare-card.after li .time { color: var(--green); }
+
+        /* Terminal */
+        .terminal {
+            background: #0d1117; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; margin: 40px 0;
+        }
+        .terminal-bar {
+            background: var(--surface); padding: 10px 16px;
+            display: flex; gap: 8px; align-items: center;
+        }
+        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #febc2e; }
+        .terminal-dot.green { background: #28c840; }
+        .terminal-title { color: var(--muted); font-size: 13px; margin-left: 8px; font-family: monospace; }
+        .terminal-body {
+            padding: 20px 24px;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 14px; line-height: 1.8; overflow-x: auto;
+        }
+        .terminal-body .prompt { color: var(--green); }
+        .terminal-body .cmd { color: var(--text); }
+        .terminal-body .output { color: var(--muted); }
+        .terminal-body .success { color: var(--green); }
+        .terminal-body .warn { color: var(--orange); }
+
+        /* Stats */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 40px 0; }
+        @media (max-width: 640px) { .stats { grid-template-columns: 1fr; } }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 32px; text-align: center;
+        }
+        .stat-card .number {
+            font-size: 42px; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-card .label { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+        /* Features */
+        .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 40px 0; }
+        @media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+        .feature {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px;
+        }
+        .feature h4 { font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .feature p { color: var(--muted); font-size: 14px; }
+
+        /* CTA */
+        .cta { text-align: center; padding: 60px 0 80px; }
+        .cta h2 { font-size: 32px; margin-bottom: 16px; }
+        .cta p { color: var(--muted); margin-bottom: 24px; }
+        .cta-btn {
+            display: inline-block; background: var(--accent); color: var(--bg);
+            text-decoration: none; padding: 12px 32px; border-radius: 8px;
+            font-weight: 600; font-size: 16px; transition: opacity 0.2s;
+        }
+        .cta-btn:hover { opacity: 0.85; }
+        .install-code {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 16px 24px; font-family: monospace;
+            font-size: 14px; margin: 24px auto; max-width: 500px; color: var(--green);
+        }
+
+        footer {
+            text-align: center; padding: 32px 0; color: var(--muted);
+            font-size: 13px; border-top: 1px solid var(--border);
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+        section h2 { font-size: 28px; text-align: center; margin-bottom: 8px; }
+        section .section-sub { text-align: center; color: var(--muted); margin-bottom: 32px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <section class="hero">
+        <div class="hero-emoji">🖨️</div>
+        <h1>uprint</h1>
+        <p class="tagline">
+            A Universal Print CLI for humans and AI agents.
+            Print from the terminal. Silently. To the right printer.
+        </p>
+        <span class="badge">✅ 25 tests</span>
+        <span class="badge">📦 PowerShell</span>
+        <span class="badge">🤖 Agent-friendly JSON</span>
+        <span class="badge">🔇 Silent printing</span>
+        <span class="badge">⚖️ MIT Licensed</span>
+    </section>
+
+    <section class="story">
+        <h2>Why this exists</h2>
+        <p>
+            I couldn't print from my dev box. Every time I needed a document printed —
+            a form, a license, a receipt — I had to
+            <span class="highlight">walk over to a coworker's desk and ask them to print it for me.</span>
+        </p>
+        <p>
+            The printer was right there. On the network. Connected via Universal Print.
+            But the tooling to actually <em>send a job to it</em> from the command line? Didn't exist.
+        </p>
+        <p>
+            <code>Start-Process -Verb Print</code> opened Adobe Acrobat, left it running,
+            printed to the wrong printer, and gave no feedback.
+            I couldn't even tell if my job was submitted, let alone
+            whether it was waiting for my badge tap at the printer.
+        </p>
+        <p>
+            So I built <span class="highlight">uprint</span> — a CLI that prints silently,
+            targets the right printer, and speaks JSON so AI agents can use it too.
+        </p>
+        <p style="margin-top: 20px;">
+            <span class="highlight">Now I just say "print this" to my AI agent, walk to the printer, badge, and go.</span>
+        </p>
+
+        <div class="story-flow">
+            <div class="flow-step"><span class="emoji">💬</span><span class="label">"Print this PDF"</span></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step"><span class="emoji">🤖</span><span class="label">Agent runs uprint</span></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step"><span class="emoji">☁️</span><span class="label">Job in cloud queue</span></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step"><span class="emoji">🪪</span><span class="label">Badge at printer</span></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step"><span class="emoji">📄</span><span class="label">Printed</span></div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Before vs. After</h2>
+        <p class="section-sub">What printing used to look like vs. what it looks like now</p>
+        <div class="comparison">
+            <div class="compare-card before">
+                <h3>❌ Before uprint</h3>
+                <ul>
+                    <li>Find coworker who can print <span class="time">5 min</span></li>
+                    <li>Explain what you need printed <span class="time">2 min</span></li>
+                    <li>Send them the file <span class="time">1 min</span></li>
+                    <li>Wait for them to print it <span class="time">3 min</span></li>
+                    <li>Walk to their desk to pick it up <span class="time">2 min</span></li>
+                    <li>Realize it printed wrong, repeat <span class="time">∞</span></li>
+                    <li><strong style="color: var(--text)">Total</strong> <span class="time">13+ min</span></li>
+                </ul>
+            </div>
+            <div class="compare-card after">
+                <h3>✅ After uprint</h3>
+                <ul>
+                    <li>"Print this" to AI agent <span class="time">3 sec</span></li>
+                    <li>Agent runs uprint silently <span class="time">2 sec</span></li>
+                    <li>Walk to printer <span class="time">30 sec</span></li>
+                    <li>Badge tap <span class="time">1 sec</span></li>
+                    <li>Grab printout <span class="time">5 sec</span></li>
+                    <li>&nbsp;</li>
+                    <li><strong style="color: var(--text)">Total</strong> <span class="time">41 sec</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>By the numbers</h2>
+        <p class="section-sub">Time saved per print job</p>
+        <div class="stats">
+            <div class="stat-card"><div class="number">95%</div><div class="label">Time reduction</div></div>
+            <div class="stat-card"><div class="number">0</div><div class="label">Coworkers bothered</div></div>
+            <div class="stat-card"><div class="number">41s</div><div class="label">Avg. print-to-paper</div></div>
+        </div>
+    </section>
+
+    <section>
+        <h2>See it in action</h2>
+        <p class="section-sub">Real commands, real output</p>
+        <div class="terminal">
+            <div class="terminal-bar">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">PowerShell — uprint</span>
+            </div>
+            <div class="terminal-body">
+<span class="prompt">❯</span> <span class="cmd">uprint setup</span>
+<span class="output">Available printers:</span>
+<span class="output">  [1] Office-Printer-1 [Universal Print]</span>
+<span class="output">  [2] Office-Printer-2 [Universal Print]</span>
+<span class="output">  [3] Microsoft Print to PDF</span>
+<span class="success">Default printer set to: Office-Printer-1</span>
+
+<span class="prompt">❯</span> <span class="cmd">uprint print report.pdf --json</span>
+<span class="output">{</span>
+<span class="output">  "version": 1,</span>
+<span class="output">  "command": "print",</span>
+<span class="output">  "success": true,</span>
+<span class="output">  "data": {</span>
+<span class="output">    "engine": "SumatraPDF",</span>
+<span class="output">    "printer": "Office-Printer-1",</span>
+<span class="output">    "status": "submitted_to_cloud"</span>
+<span class="output">  },</span>
+<span class="warn">  "warnings": ["Universal Print: job held in cloud until badge release"]</span>
+<span class="output">}</span>
+
+<span class="prompt">❯</span> <span class="cmd">uprint health --json</span>
+<span class="success">✅ All 4 checks PASS — Spooler, Printer, Queue, UP Driver</span>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Features</h2>
+        <p class="section-sub">Built for both humans and AI agents</p>
+        <div class="features">
+            <div class="feature"><h4>🔇 Silent Printing</h4><p>SumatraPDF engine runs hidden — no windows, no popups, no zombie processes.</p></div>
+            <div class="feature"><h4>🎯 Printer Targeting</h4><p>Explicitly targets your chosen printer. No more wrong-printer surprises.</p></div>
+            <div class="feature"><h4>🤖 Agent-Friendly JSON</h4><p>Every command supports <code>--json</code> with a versioned envelope. LLM agents parse it natively.</p></div>
+            <div class="feature"><h4>🏥 Health Diagnostics</h4><p>Composite health check: spooler, printer status, queue backlog, UP driver.</p></div>
+            <div class="feature"><h4>☁️ Universal Print Aware</h4><p>Understands the cloud queue — warns you to badge at the printer for release.</p></div>
+            <div class="feature"><h4>⚡ Interactive Setup</h4><p><code>uprint setup</code> discovers printers, shows a list, saves your default. 10 seconds.</p></div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <h2>Get started</h2>
+        <p>Clone the repo, run setup, print something.</p>
+        <div class="install-code">
+            git clone https://github.com/kalebcole/uprint-cli.git<br>
+            cd uprint-cli<br>
+            .\uprint.ps1 setup
+        </div>
+        <br>
+        <a href="https://github.com/kalebcole/uprint-cli" class="cta-btn">View on GitHub →</a>
+    </section>
+
+</div>
+<footer>
+    <div class="container">
+        Built by <a href="https://github.com/kalebcole">Kaleb Cole</a> ·
+        MIT License ·
+        <a href="https://github.com/kalebcole/uprint-cli">GitHub</a>
+    </div>
+</footer>
+</body>
+</html>
