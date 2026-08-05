@@ -1,319 +1,594 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+  ============================================================================
+  DESIGN CONTRACT — uprint-cli landing page
+  Seed key 7bf34255 · assigned index 6 · mode: persuade
+  ============================================================================
+
+  THESIS
+    A printer is a machine with a documented paper path. This page is the
+    service manual for that machine, and the machine on it actually runs.
+
+  OWN-WORLD
+    Service-manual exploded-parts diagram. Light ground (#F2EFE6) because
+    the scene is a printed manual read under office fluorescents, not a
+    terminal at midnight — which also escapes the dark-CLI AI default.
+    Archivo / Archivo Narrow for the plate lettering, JetBrains Mono for
+    machine output only. Figure numbers, callout rules, and section marks
+    carry the identity instead of icon cards.
+
+  STORY
+    A Microsoft employee who cannot print from their dev box asks an agent
+    in plain language, and the sheet comes out of a machine across the room.
+
+  FIRST VIEWPORT
+    What it is, the install line that actually works, and FIG. 1 — a live
+    demo where the visitor types their own prompt, presses SEND, and watches
+    a sheet feed in, travel the paper path, and slide out with their own
+    filename printed on it.
+
+  FORM
+    Static HTML + one stylesheet + one script. No framework, no build step,
+    no runtime dependency, relative paths only. Portable to any static host.
+
+  SIGNATURE INTERACTION
+    The prompt-to-paper rig. Nothing inside the machine moves until the
+    badge taps the reader, because that is literally how Universal Print
+    behaves — the job is held in the cloud until release.
+
+  HONESTY CONSTRAINTS
+    - Every command, flag, exit code and envelope field is verified against
+          src/ and dist/ on master. No invented surface.
+    - No fabricated metrics. The previous version of this page published
+      "95% time reduction" and "41s avg print-to-paper"; both were invented
+      and are deliberately absent here.
+    - The envelope never says "printed". On a Universal Print target it says
+      "submitted_to_cloud"; on anything else, "submitted". Both are on the
+      page because an agent has to branch on both. See Invoke-UPrintPrint.ps1
+      line 59.
+    - Unshipped commands are marked data-release="pending" and are visually
+      flagged as not yet available. See RELEASE STRINGS below.
+    - No deep issue links. Issue numbers differ between the private work repo
+      and the public mirror this page is served from, so a link to /issues/34
+      would 404 for every visitor. Limitations are stated in prose and the
+      tracker is linked at the top level only. All four outbound links were
+      checked for HTTP 200 against the public repo.
+  ============================================================================
+-->
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>uprint — Universal Print CLI</title>
-    <style>
-        :root {
-            --bg: #0d1117;
-            --surface: #161b22;
-            --border: #30363d;
-            --text: #e6edf3;
-            --muted: #8b949e;
-            --accent: #58a6ff;
-            --green: #3fb950;
-            --orange: #d29922;
-            --red: #f85149;
-            --purple: #bc8cff;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
-        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
-
-        /* Hero */
-        .hero { text-align: center; padding: 80px 0 60px; }
-        .hero-emoji { font-size: 64px; margin-bottom: 16px; }
-        .hero h1 {
-            font-size: 48px; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), var(--purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
-        }
-        .hero .tagline { font-size: 20px; color: var(--muted); max-width: 600px; margin: 0 auto 32px; }
-        .badge {
-            display: inline-block; background: var(--surface); border: 1px solid var(--border);
-            border-radius: 20px; padding: 6px 16px; font-size: 14px; color: var(--green); margin: 4px;
-        }
-
-        /* Story */
-        .story {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 40px; margin: 40px 0;
-        }
-        .story h2 { font-size: 24px; margin-bottom: 16px; color: var(--accent); }
-        .story p { color: var(--muted); margin-bottom: 12px; }
-        .story .highlight { color: var(--text); font-weight: 600; }
-        .story-flow {
-            display: flex; align-items: center; justify-content: center;
-            gap: 16px; margin: 32px 0 16px; flex-wrap: wrap;
-        }
-        .flow-step {
-            background: var(--bg); border: 1px solid var(--border);
-            border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 140px;
-        }
-        .flow-step .emoji { font-size: 28px; display: block; margin-bottom: 6px; }
-        .flow-step .label { font-size: 13px; color: var(--muted); }
-        .flow-arrow { color: var(--accent); font-size: 24px; }
-
-        /* Comparison */
-        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 40px 0; }
-        @media (max-width: 640px) { .comparison { grid-template-columns: 1fr; } }
-        .compare-card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 32px;
-        }
-        .compare-card h3 { font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .compare-card.before h3 { color: var(--red); }
-        .compare-card.after h3 { color: var(--green); }
-        .compare-card ul { list-style: none; padding: 0; }
-        .compare-card li {
-            padding: 8px 0; color: var(--muted); border-bottom: 1px solid var(--border); font-size: 14px;
-        }
-        .compare-card li:last-child { border-bottom: none; }
-        .compare-card li .time {
-            float: right; font-weight: 600; font-family: 'SF Mono', 'Fira Code', monospace;
-        }
-        .compare-card.before li .time { color: var(--red); }
-        .compare-card.after li .time { color: var(--green); }
-
-        /* Terminal */
-        .terminal {
-            background: #0d1117; border: 1px solid var(--border);
-            border-radius: 12px; overflow: hidden; margin: 40px 0;
-        }
-        .terminal-bar {
-            background: var(--surface); padding: 10px 16px;
-            display: flex; gap: 8px; align-items: center;
-        }
-        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .terminal-dot.red { background: #ff5f57; }
-        .terminal-dot.yellow { background: #febc2e; }
-        .terminal-dot.green { background: #28c840; }
-        .terminal-title { color: var(--muted); font-size: 13px; margin-left: 8px; font-family: monospace; }
-        .terminal-body {
-            padding: 20px 24px;
-            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 14px; line-height: 1.8; overflow-x: auto;
-        }
-        .terminal-body .prompt { color: var(--green); }
-        .terminal-body .cmd { color: var(--text); }
-        .terminal-body .output { color: var(--muted); }
-        .terminal-body .success { color: var(--green); }
-        .terminal-body .warn { color: var(--orange); }
-
-        /* Stats */
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 40px 0; }
-        @media (max-width: 640px) { .stats { grid-template-columns: 1fr; } }
-        .stat-card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 32px; text-align: center;
-        }
-        .stat-card .number {
-            font-size: 42px; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), var(--green));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .stat-card .label { color: var(--muted); font-size: 14px; margin-top: 4px; }
-
-        /* Features */
-        .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 40px 0; }
-        @media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
-        .feature {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 24px;
-        }
-        .feature h4 { font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        .feature p { color: var(--muted); font-size: 14px; }
-
-        /* CTA */
-        .cta { text-align: center; padding: 60px 0 80px; }
-        .cta h2 { font-size: 32px; margin-bottom: 16px; }
-        .cta p { color: var(--muted); margin-bottom: 24px; }
-        .cta-btn {
-            display: inline-block; background: var(--accent); color: var(--bg);
-            text-decoration: none; padding: 12px 32px; border-radius: 8px;
-            font-weight: 600; font-size: 16px; transition: opacity 0.2s;
-        }
-        .cta-btn:hover { opacity: 0.85; }
-        .install-code {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 8px; padding: 16px 24px; font-family: monospace;
-            font-size: 14px; margin: 24px auto; max-width: 500px; color: var(--green);
-        }
-
-        footer {
-            text-align: center; padding: 32px 0; color: var(--muted);
-            font-size: 13px; border-top: 1px solid var(--border);
-        }
-        footer a { color: var(--accent); text-decoration: none; }
-        section h2 { font-size: 28px; text-align: center; margin-bottom: 8px; }
-        section .section-sub { text-align: center; color: var(--muted); margin-bottom: 32px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>uprint: Universal Print CLI for humans and AI agents</title>
+<meta name="description" content="A Universal Print CLI for Windows. Print from the terminal, silently, to the right printer, and let an AI agent do it for you. Every command speaks a versioned JSON envelope.">
+<meta property="og:title" content="uprint: Universal Print CLI for humans and AI agents">
+<meta property="og:description" content="Print from the terminal, silently, to the right printer. Every command speaks a versioned JSON envelope, so an agent can drive it.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="container">
 
-    <section class="hero">
-        <div class="hero-emoji">🖨️</div>
-        <h1>uprint</h1>
-        <p class="tagline">
-            A Universal Print CLI for humans and AI agents.
-            Print from the terminal. Silently. To the right printer.
-        </p>
-        <span class="badge">📦 PowerShell</span>
-        <span class="badge">🤖 Agent-friendly JSON</span>
-        <span class="badge">🔇 Silent printing</span>
-        <span class="badge">⚖️ MIT Licensed</span>
-    </section>
+<a class="skip" href="#main">Skip to content</a>
 
-    <section class="story">
-        <h2>Why this exists</h2>
-        <p>
-            I couldn't print from my dev box. Every time I needed a document printed —
-            a form, a license, a receipt — I had to
-            <span class="highlight">walk over to a coworker's desk and ask them to print it for me.</span>
-        </p>
-        <p>
-            The printer was right there. On the network. Connected via Universal Print.
-            But the tooling to actually <em>send a job to it</em> from the command line? Didn't exist.
-        </p>
-        <p>
-            So I built <span class="highlight">uprint</span> — a CLI that prints silently,
-            targets the right printer, and speaks JSON so AI agents can use it too.
-        </p>
-        <p style="margin-top: 20px;">
-            <span class="highlight">Now I just say "print this" to my AI agent, walk to the printer, badge, and go.</span>
-        </p>
+<!--
+  ===== RELEASE STRINGS =============================================
+  When issue #22 (TypeScript port / npm package) lands, update the
+  node marked data-release-key="npm" and flip its data-release
+  attribute from "pending" to "shipped".
 
-        <div class="story-flow">
-            <div class="flow-step"><span class="emoji">💬</span><span class="label">"Print this PDF"</span></div>
-            <span class="flow-arrow">→</span>
-            <div class="flow-step"><span class="emoji">🤖</span><span class="label">Agent runs uprint</span></div>
-            <span class="flow-arrow">→</span>
-            <div class="flow-step"><span class="emoji">☁️</span><span class="label">Job in cloud queue</span></div>
-            <span class="flow-arrow">→</span>
-            <div class="flow-step"><span class="emoji">🪪</span><span class="label">Badge at printer</span></div>
-            <span class="flow-arrow">→</span>
-            <div class="flow-step"><span class="emoji">📄</span><span class="label">Printed</span></div>
-        </div>
-    </section>
+  When issue #23 (uprint skill install) lands, do the same for the
+  node marked data-release-key="skill".
 
-    <section>
-        <h2>Before vs. After</h2>
-        <p class="section-sub">What printing used to look like vs. what it looks like now</p>
-        <div class="comparison">
-            <div class="compare-card before">
-                <h3>❌ Before uprint</h3>
-                <ul>
-                    <li>Find coworker who can print <span class="time">5 min</span></li>
-                    <li>Explain what you need printed <span class="time">2 min</span></li>
-                    <li>Send them the file <span class="time">1 min</span></li>
-                    <li>Wait for them to print it <span class="time">3 min</span></li>
-                    <li>Walk to their desk to pick it up <span class="time">2 min</span></li>
-                    <li>Realize it printed wrong, repeat <span class="time">∞</span></li>
-                    <li><strong style="color: var(--text)">Total</strong> <span class="time">13+ min</span></li>
-                </ul>
-            </div>
-            <div class="compare-card after">
-                <h3>✅ After uprint</h3>
-                <ul>
-                    <li>"Print this" to AI agent <span class="time">3 sec</span></li>
-                    <li>Agent runs uprint silently <span class="time">2 sec</span></li>
-                    <li>Walk to printer <span class="time">30 sec</span></li>
-                    <li>Badge tap <span class="time">1 sec</span></li>
-                    <li>Grab printout <span class="time">5 sec</span></li>
-                    <li>&nbsp;</li>
-                    <li><strong style="color: var(--text)">Total</strong> <span class="time">41 sec</span></li>
-                </ul>
-            </div>
-        </div>
-    </section>
+  Those two are one-line flips. Issue #29 is NOT — read on.
 
-    <section>
-        <h2>By the numbers</h2>
-        <p class="section-sub">Time saved per print job</p>
-        <div class="stats">
-            <div class="stat-card"><div class="number">95%</div><div class="label">Time reduction</div></div>
-            <div class="stat-card"><div class="number">0</div><div class="label">Coworkers bothered</div></div>
-            <div class="stat-card"><div class="number">41s</div><div class="label">Avg. print-to-paper</div></div>
-        </div>
-    </section>
+  ISSUE #29 (make JSON the default output) IS A CONTENT CHANGE, NOT A
+  STRING FLIP. This page currently frames the tool as human-readable by
+  default with --json as the opt-in for agents. If #29 lands, that
+  framing inverts: JSON becomes the default and --human becomes the
+  opt-out. Three things go stale, and none of them are marked pending
+  because they are true today:
 
-    <section>
-        <h2>See it in action</h2>
-        <p class="section-sub">Real commands, real output</p>
-        <div class="terminal">
-            <div class="terminal-bar">
-                <span class="terminal-dot red"></span>
-                <span class="terminal-dot yellow"></span>
-                <span class="terminal-dot green"></span>
-                <span class="terminal-title">PowerShell — uprint</span>
-            </div>
-            <div class="terminal-body">
-<span class="prompt">❯</span> <span class="cmd">uprint setup</span><br>
-<span class="output">Available printers:</span><br>
-<span class="output">  [1] Office-Printer-1 [Universal Print]</span><br>
-<span class="output">  [2] Office-Printer-2 [Universal Print]</span><br>
-<span class="output">  [3] Microsoft Print to PDF</span><br>
-<span class="success">Default printer set to: Office-Printer-1</span><br>
-<br>
-<span class="prompt">❯</span> <span class="cmd">uprint print report.pdf --json</span><br>
-<span class="output">{</span><br>
-<span class="output">  "version": 1,</span><br>
-<span class="output">  "command": "print",</span><br>
-<span class="output">  "success": true,</span><br>
-<span class="output">  "data": {</span><br>
-<span class="output">    "engine": "SumatraPDF",</span><br>
-<span class="output">    "printer": "Office-Printer-1",</span><br>
-<span class="output">    "status": "submitted_to_cloud"</span><br>
-<span class="output">  },</span><br>
-<span class="warn">  "warnings": ["Universal Print: job held in cloud until badge release"]</span><br>
-<span class="output">}</span><br>
-<br>
-<span class="prompt">❯</span> <span class="cmd">uprint health --json</span><br>
-<span class="success">✅ All 4 checks PASS — Spooler, Printer, Queue, UP Driver</span><br>
-            </div>
-        </div>
-    </section>
+    - the <dt><code>--json</code></dt> entry in the global flags list,
+      which says it emits "instead of human text"
+    - the jsonOutput config row, which describes it as a way to avoid
+      passing --json each time; the key becomes meaningless or inverts
+    - the --json in the STDOUT label on the FIG. 1 rig, and in the
+      sample commands, which become redundant rather than wrong
 
-    <section>
-        <h2>Features</h2>
-        <p class="section-sub">Built for both humans and AI agents</p>
-        <div class="features">
-            <div class="feature"><h4>🔇 Silent Printing</h4><p>SumatraPDF engine runs hidden — no windows, no popups, no zombie processes.</p></div>
-            <div class="feature"><h4>🎯 Printer Targeting</h4><p>Explicitly targets your chosen printer. No more wrong-printer surprises.</p></div>
-            <div class="feature"><h4>🤖 Agent-Friendly JSON</h4><p>Every command supports <code>--json</code> with a versioned envelope. LLM agents parse it natively.</p></div>
-            <div class="feature"><h4>🏥 Health Diagnostics</h4><p>Composite health check: spooler, printer status, queue backlog, UP driver.</p></div>
-            <div class="feature"><h4>☁️ Universal Print Aware</h4><p>Understands the cloud queue — warns you to badge at the printer for release.</p></div>
-            <div class="feature"><h4>⚡ Interactive Setup</h4><p><code>uprint setup</code> discovers printers, shows a list, saves your default. 10 seconds.</p></div>
-        </div>
-    </section>
+              Check the flag&rsquo;s real behaviour in src/ before editing, not the
+  issue title. #29 was open and unmerged when this page was written.
 
-    <section class="cta">
-        <h2>Get started</h2>
-        <p>Clone the repo, run setup, print something.</p>
-        <div class="install-code">
-            git clone https://github.com/kalebcole/uprint-cli.git<br>
-            cd uprint-cli<br>
-            .\uprint.ps1 setup
-        </div>
-        <br>
-        <a href="https://github.com/kalebcole/uprint-cli" class="cta-btn">View on GitHub →</a>
-    </section>
+  ISSUE #35 (TypeScript port) INVERTS THE EXIT-CODE COPY, in the other
+  direction. On master there is no exit statement anywhere in src/, so a
+  handled error emits success:false and the process still exits 0; only
+  an unknown command exits 1. The page says exactly that, in the
+  "Success is the signal" contract item and the exit-code list.
 
-</div>
-<footer>
-    <div class="container">
-        Built by <a href="https://github.com/kalebcole">Kaleb Cole</a> ·
-        MIT License ·
-        <a href="https://github.com/kalebcole/uprint-cli">GitHub</a>
+  The port replaces that. src/lib/render.ts on the port branch:
+
+      export function exitCodeFor(result: CommandResult): ExitCode {
+        if (result.exitCode !== undefined) return result.exitCode;
+        return result.error ? EXIT_ERROR : EXIT_SUCCESS;
+      }
+
+  No mode parameter, so any errored result exits 1. When #35 lands, the
+  "still exits 0" clause becomes wrong and exit 1 goes back to reading
+  as a general error.
+
+  Note the direction. That copy is accurate today and the merge queue
+  breaks it. The data-release="pending" markers cannot express this,
+  because they only flag what is already false. A claim can be true,
+  unmarked, and doomed at the same time.
+  ===================================================================
+-->
+
+<header class="masthead">
+  <div class="shell">
+    <div class="plate">
+      <span class="mark">uprint</span>
+<span class="rev">REV. 2 &middot; TYPESCRIPT</span>
     </div>
+    <nav aria-label="Sections">
+      <a href="#why">Why</a>
+      <a href="#agents">For agents</a>
+      <a href="#reference">Commands</a>
+      <a href="#install">Install</a>
+      <a class="ext" href="https://github.com/kalebcole/uprint-cli">GitHub&nbsp;↗</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================ HERO ============================ -->
+<section class="hero">
+  <div class="shell hero-grid">
+
+    <div class="hero-copy">
+      <h1>Print from the terminal.<br>Or just ask your agent to.</h1>
+      <p class="lede">
+        <strong>uprint</strong> is a Universal Print CLI for Windows. It prints silently,
+        to the printer you actually meant, and every command can speak a versioned
+        JSON envelope, so a human can run it and an AI agent can drive it.
+      </p>
+
+      <div class="install-block">
+        <span class="tag">INSTALL · WORKS TODAY</span>
+        <div class="cmdline">
+          <pre id="installCmd">git clone https://github.com/kalebcole/uprint-cli.git
+cd uprint-cli
+npm ci && npm run build
+node bin/uprint.js setup</pre>
+          <button class="copy" data-copy="#installCmd" aria-label="Copy install commands">COPY</button>
+        </div>
+        <p class="fineprint">
+              Windows, Node.js 20 or newer. No package-manager step yet.
+          <span data-release="pending" data-release-key="npm">An <code>npm install -g</code> route arrives with the TypeScript port.</span>
+        </p>
+      </div>
+
+      <div class="ba">
+        <div class="ba-col ba-before">
+          <span class="ba-tag">BEFORE</span>
+          <code>Start-Process -Verb Print</code>
+          <p>Acrobat opens and stays open. The job goes to whatever printer Windows had selected. Nothing tells you whether it worked.</p>
+        </div>
+        <div class="ba-col ba-after">
+          <span class="ba-tag">AFTER</span>
+          <code>uprint print report.pdf</code>
+          <p>Nothing opens. The printer you named gets it. You get back where it went, which engine sent it, and whether it is waiting on your badge.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FIG. 1 — the live rig ===== -->
+    <figure class="rig-figure">
+      <figcaption class="fig-head">
+        <span class="fig-no">FIG. 1</span>
+        <span class="fig-title">Prompt to paper</span>
+      </figcaption>
+
+      <div class="prompt-bay">
+        <label class="field-label" for="prompt">SAY WHAT YOU WANT PRINTED</label>
+        <div class="inrow">
+          <span class="pfx">you →</span>
+          <input id="prompt" value="print the Q3 handover doc" aria-label="Prompt to the agent" maxlength="70">
+          <button id="go">▶ SEND</button>
+        </div>
+
+        <div class="pipe" aria-live="polite">
+          <div class="row" id="rowCmd"><span class="n">AGENT · TOOL CALL</span><code id="cmd"></code></div>
+      <div class="row" id="rowEnv"><span class="n">STDOUT &middot; default</span><code id="env"></code></div>
+          <div class="row" id="rowState"><span class="n">JOB STATE</span><code id="state">—</code></div>
+        </div>
+      </div>
+
+      <div class="machine rig" id="rig" data-led="off" aria-hidden="true">
+        <div class="feedsheet"></div>
+        <div class="tray-in"></div>
+        <div class="body">
+          <div class="win">
+            <span class="travel"></span>
+            <span class="bar"></span>
+            <span class="roller r1"></span><span class="roller r2"></span>
+            <span class="wlab">PAPER PATH</span>
+          </div>
+          <div class="panel"><span class="led"></span><span class="rfid">RFID</span></div>
+          <div class="slot"></div>
+        </div>
+        <div class="badge">BADGE</div>
+        <div class="sheet">
+          <div class="doc" id="doc">Q3 HANDOVER DOC</div>
+          <div class="meta">OFFICE-PRINTER-1 · SUMATRAPDF</div>
+          <div class="l a"></div><div class="l b"></div><div class="l c"></div><div class="l a"></div>
+          <div class="l d"></div><div class="l b"></div><div class="l a"></div><div class="l c"></div><div class="l d"></div>
+          <div class="stamp">RELEASED · 1 COPY</div>
+        </div>
+        <div class="tray"></div>
+        <div class="mach-foot">OFFICE-PRINTER-1 · UNIVERSAL PRINT</div>
+      </div>
+
+      <p class="fig-note">
+        Universal Print holds the job in the cloud until someone badges at the device.
+        That is why the envelope reports <code>submitted_to_cloud</code> here, plain
+        <code>submitted</code> on a non-Universal-Print target, and <code>printed</code>
+        never: the tool only claims what it can actually observe.
+      </p>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================ WHY ============================ -->
+<section id="why" class="why">
+  <div class="shell">
+    <div class="sec-head">
+      <span class="fig-no">§ 1</span>
+      <h2>Why this exists</h2>
+    </div>
+
+    <div class="why-grid">
+      <div class="why-story">
+        <p class="big">
+          I couldn't print from my dev box. Every time I needed a document printed, whether a form,
+          a license or a receipt, I had to walk over to a coworker's desk and ask them to print it for me.
+        </p>
+        <p>
+          The printer was right there. On the network. Connected via Universal Print. But the tooling to
+          actually <em>send a job to it</em> from the command line? Didn't exist.
+        </p>
+        <p>
+          <code>Start-Process -Verb Print</code> opened Adobe Acrobat, left it running, printed to the
+          wrong printer, and gave no feedback. I couldn't even tell if my job was submitted, let alone
+          whether it was waiting for my badge tap at the printer.
+        </p>
+        <p>
+          So I built uprint. A CLI that prints silently, targets the right printer, and speaks JSON
+          so AI agents can use it too.
+        </p>
+      </div>
+
+      <aside class="why-aside">
+        <h3>What that actually fixed</h3>
+        <dl class="fixes">
+          <dt>Silent</dt>
+          <dd>SumatraPDF runs hidden and exits. No window, no popup, no process left behind.</dd>
+
+          <dt>Targeted</dt>
+          <dd>The printer name is passed explicitly to the engine, not inherited from whatever Windows had selected.</dd>
+
+          <dt>Legible</dt>
+          <dd>Every command reports where the job went, which engine sent it, and whether it is waiting on a badge.</dd>
+
+          <dt>Fallback</dt>
+          <dd>SumatraPDF, then Acrobat, then the OS print verb. The envelope names which one ran.</dd>
+        </dl>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ AGENTS ============================ -->
+<section id="agents" class="agents">
+  <div class="shell">
+    <div class="sec-head">
+      <span class="fig-no">§ 2</span>
+      <h2>The part built for agents</h2>
+    </div>
+
+    <p class="sec-lede">
+      Most CLIs make an agent scrape human text and guess. uprint hands it a contract instead:
+      one envelope shape, every command, every time, success or failure.
+    </p>
+
+    <div class="envelope-grid">
+      <div class="env-col">
+        <span class="tag">SUCCESS · uprint status --json</span>
+        <pre class="code"><span class="p">{</span>
+  <span class="k">"version"</span>: <span class="num">1</span>,
+  <span class="k">"command"</span>: <span class="str">"status"</span>,
+  <span class="k">"timestamp"</span>: <span class="str">"2026-01-15T09:30:00.0000000-08:00"</span>,
+  <span class="k">"success"</span>: <span class="num">true</span>,
+  <span class="k">"data"</span>: <span class="p">{</span>
+    <span class="k">"name"</span>: <span class="str">"Office-Printer-1"</span>,
+    <span class="k">"status"</span>: <span class="str">"Normal"</span>,
+    <span class="k">"driver"</span>: <span class="str">"Universal Print Class Driver"</span>,
+    <span class="k">"port"</span>: <span class="str">"UPPORT:"</span>,
+    <span class="k">"pendingJobs"</span>: <span class="num">0</span>,
+    <span class="k">"isUP"</span>: <span class="num">true</span>
+  <span class="p">}</span>
+<span class="p">}</span></pre>
+      </div>
+
+      <div class="env-col">
+        <span class="tag">FAILURE · <code>error</code> replaces <code>data</code></span>
+        <pre class="code"><span class="p">{</span>
+  <span class="k">"version"</span>: <span class="num">1</span>,
+  <span class="k">"command"</span>: <span class="str">"status"</span>,
+  <span class="k">"timestamp"</span>: <span class="str">"2026-01-15T09:31:12.0000000-08:00"</span>,
+  <span class="k">"success"</span>: <span class="num">false</span>,
+  <span class="k">"error"</span>: <span class="p">{</span>
+    <span class="k">"code"</span>: <span class="str">"PRINTER_NOT_FOUND"</span>,
+    <span class="k">"message"</span>: <span class="str">"Specified printer was not found"</span>,
+    <span class="k">"suggestion"</span>: <span class="str">"Run 'uprint printers' to list available printers"</span>
+  <span class="p">}</span>
+<span class="p">}</span></pre>
+      </div>
+    </div>
+
+    <div class="contract-row">
+      <div class="contract-item">
+        <h4>Never both</h4>
+        <p>An envelope carries <code>data</code> or <code>error</code>, never the two together. Branch on <code>success</code> and you are done.</p>
+      </div>
+      <div class="contract-item">
+        <h4>Errors suggest</h4>
+        <p>Every error carries a <code>suggestion</code> naming the next command to run, so an agent can recover instead of stalling.</p>
+      </div>
+      <div class="contract-item">
+        <h4>Warnings ride along</h4>
+        <p>An optional <code>warnings</code> array sits beside a success, so a job can succeed <em>and</em> report that it is waiting on a badge.</p>
+      </div>
+      <div class="contract-item">
+        <h4>Success is the signal</h4>
+        <p>Branch on <code>success</code>, not the exit code. Every result exits <code>0</code> &mdash; a handled error and an unknown command alike. The envelope carries the outcome.</p>
+      </div>
+    </div>
+
+    <div class="skill-callout" data-release="pending" data-release-key="skill">
+      <span class="pending-flag">NOT SHIPPED YET</span>
+      <h3><code>uprint skill install</code></h3>
+      <p>
+        One command to register uprint as a tool your coding agent already knows how to call.
+        No prompt engineering, no wrapper script. It is on the roadmap and does not exist yet.
+        Until it lands, point your agent at <a href="https://github.com/kalebcole/uprint-cli/blob/master/SKILL.md"><code>SKILL.md</code></a>
+        in the repo, which documents the same surface by hand.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ REFERENCE ============================ -->
+<section id="reference" class="reference">
+  <div class="shell">
+    <div class="sec-head">
+      <span class="fig-no">§ 3</span>
+      <h2>Command reference</h2>
+    </div>
+    <p class="sec-lede">Everything the CLI accepts today. Nothing here is aspirational.</p>
+
+    <div class="table-scroll">
+      <table class="ref">
+        <caption class="sr-only">uprint commands, what they do, and their flags</caption>
+        <thead>
+          <tr><th scope="col">Command</th><th scope="col">What it does</th><th scope="col">Flags</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>uprint setup</code></th>
+            <td>Interactive printer discovery. Lists what is available and saves your default. Run this first.</td>
+            <td class="flags"><span class="none">none</span></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint printers</code></th>
+            <td>List available printers.</td>
+            <td class="flags"><code>--universal-only</code> <code>-u</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint status</code></th>
+            <td>Printer state, driver, port, pending job count, and whether it is a Universal Print device.</td>
+            <td class="flags"><span class="none">none</span></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint print &lt;file&gt;</code></th>
+            <td>Print a file. Resolves the path, selects a print engine, and reports which one it used.</td>
+            <td class="flags"><code>--copies N</code> <code>--duplex</code> <code>--color</code> <code>--mono</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint queue</code></th>
+            <td>List jobs currently in the print queue.</td>
+            <td class="flags"><span class="none">none</span></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint queue cancel &lt;id&gt;</code></th>
+            <td>Cancel a single job by its numeric id.</td>
+            <td class="flags"><span class="none">none</span></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint queue cancel --all</code></th>
+            <td>Cancel every job on the target printer.</td>
+            <td class="flags"><code>--all</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint health</code></th>
+            <td>Composite diagnostic across spooler, printer state, queue backlog, and the Universal Print driver.</td>
+            <td class="flags"><span class="none">none</span></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint config set &lt;key&gt; &lt;value&gt;</code></th>
+            <td>Write a config value. Booleans and integers are coerced from strings.</td>
+            <td class="flags"><span class="none">none</span></td>
+          </tr>
+          <tr>
+            <th scope="row"><code>uprint config get</code></th>
+            <td>
+              Print the whole configuration.
+              <span class="caveat">A key argument is accepted but currently ignored. It always returns the full config. Known bug.</span>
+            </td>
+            <td class="flags"><span class="none">none</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="globals">
+      <div class="glob-col">
+        <h4>Global flags</h4>
+        <dl class="kv">
+        <dt><code>--human</code></dt><dd>Opt out of JSON and print readable tables. <code>--json</code> is accepted but now a no-op.</dd>
+          <dt><code>--printer &lt;name&gt;</code></dt><dd>Override the configured default for one invocation.</dd>
+          <dt><code>--help</code></dt><dd>Usage summary.</dd>
+        </dl>
+      </div>
+      <div class="glob-col">
+        <h4>Exit codes</h4>
+        <dl class="kv">
+          <dt><code>0</code></dt><dd>Success &mdash; and also a handled error, which reports itself in the envelope. Check <code>success</code>.</dd>
+          <dt><code>1</code></dt><dd>Unknown command.</dd>
+          <dt><code>3</code></dt><dd>Invalid input, such as a missing file argument.</dd>
+        </dl>
+      </div>
+      <div class="glob-col">
+        <h4>Configuration</h4>
+        <p class="kv-note">Stored at <code>%USERPROFILE%\.uprint\config.json</code></p>
+        <dl class="kv">
+          <dt><code>defaultPrinter</code></dt><dd>Target used when <code>--printer</code> is absent.</dd>
+        <dt><code>jsonOutput</code></dt><dd>Defaults to <code>true</code>. Set it to <code>false</code> to make every command behave as if <code>--human</code> were passed.</dd>
+          <dt><code>autoWake</code></dt><dd>Default <code>true</code>.</dd>
+          <dt><code>timeout</code></dt><dd>Default <code>10000</code>.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ INSTALL ============================ -->
+<section id="install" class="install">
+  <div class="shell">
+    <div class="sec-head">
+      <span class="fig-no">§ 4</span>
+      <h2>Get it running</h2>
+    </div>
+
+    <ol class="steps">
+      <li>
+        <span class="step-n">01</span>
+        <div class="step-body">
+          <h4>Clone and set up</h4>
+          <div class="cmdline sm">
+            <pre id="step1">git clone https://github.com/kalebcole/uprint-cli.git
+cd uprint-cli
+npm ci && npm run build
+node bin/uprint.js setup</pre>
+            <button class="copy" data-copy="#step1" aria-label="Copy setup commands">COPY</button>
+          </div>
+          <p><code>setup</code> lists the printers it can see and saves the one you choose. Until you run it, every other command stops and tells you to.</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-n">02</span>
+        <div class="step-body">
+          <h4>Print something</h4>
+          <div class="cmdline sm">
+<pre id="step2">node bin/uprint.js print report.pdf --human</pre>
+            <button class="copy" data-copy="#step2" aria-label="Copy print command">COPY</button>
+          </div>
+          <p>If the target is a Universal Print device, the job waits in the cloud until you badge at the printer. The output says so.</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-n">03</span>
+        <div class="step-body">
+          <h4>Hand it to an agent</h4>
+          <div class="cmdline sm">
+<pre id="step3">node bin/uprint.js print report.pdf</pre>
+            <button class="copy" data-copy="#step3" aria-label="Copy JSON command">COPY</button>
+          </div>
+          <p>Point your agent at <code>skills/uprint/SKILL.md</code> in the repo for the documented surface, and let it branch on <code>success</code>.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="reqs">
+      <h4>Requirements</h4>
+      <ul>
+        <li>Windows 10 or 11 with Node.js 20 or newer</li>
+        <li>A printer the machine can already see, Universal Print or otherwise</li>
+        <li>Optional: SumatraPDF in <code>tools\</code> for fully silent printing. Without it, uprint falls back to Acrobat, then the OS print verb.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ KNOWN LIMITS ============================ -->
+<section class="limits">
+  <div class="shell">
+    <div class="sec-head">
+      <span class="fig-no">§ 5</span>
+      <h2>Known limits</h2>
+    </div>
+    <p class="sec-lede">
+      Printing touches hardware, a cloud queue and a badge reader. Here is what this tool does not
+      yet handle, stated up front rather than discovered later.
+    </p>
+    <ul class="limit-list">
+      <li>
+        <strong>Submitted is not printed.</strong>
+        A successful envelope means the job reached the spooler or the cloud queue. It is not proof
+        that paper came out. The print engine's exit code is not yet checked.
+      </li>
+      <li>
+        <strong>Print options are recorded, not yet enforced.</strong>
+        <code>--duplex</code>, <code>--color</code> and <code>--mono</code> are echoed back in the
+        envelope, but the underlying engine does not apply them.
+      </li>
+      <li>
+        <strong><code>config get</code> ignores its key.</strong>
+        It returns the entire config regardless of what you ask for.
+      </li>
+      <li>
+        <strong>Windows only.</strong>
+        It is built on the Windows print subsystem and PowerShell's printer cmdlets. There is no
+        macOS or Linux path.
+      </li>
+    </ul>
+    <p class="limit-foot">
+      All four are tracked in the issue tracker. If one of them is in your way,
+      <a href="https://github.com/kalebcole/uprint-cli/issues">say so there</a>.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="shell foot-grid">
+    <div>
+      <span class="mark">uprint</span>
+      <p>A Universal Print CLI for humans and AI agents.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="https://github.com/kalebcole/uprint-cli">Source</a>
+      <a href="https://github.com/kalebcole/uprint-cli/blob/master/SKILL.md">Agent skill</a>
+      <a href="https://github.com/kalebcole/uprint-cli/issues">Issues</a>
+      <a href="https://github.com/kalebcole/uprint-cli/blob/master/LICENSE">MIT</a>
+    </nav>
+  </div>
 </footer>
+
+<script src="rig.js"></script>
 </body>
 </html>
