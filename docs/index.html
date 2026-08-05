@@ -177,8 +177,8 @@ node bin/uprint.js setup</pre>
       <div class="ba">
         <div class="ba-col ba-before">
           <span class="ba-tag">BEFORE</span>
-          <code>Start-Process -Verb Print</code>
-          <p>Acrobat opens and stays open. The job goes to whatever printer Windows had selected. Nothing tells you whether it worked.</p>
+          <code>Open PDF → Print → right printer</code>
+          <p>You pick the right printer and confirm. No error appears. No page comes out. Nothing tells you where the job stopped.</p>
         </div>
         <div class="ba-col ba-after">
           <span class="ba-tag">AFTER</span>
@@ -265,9 +265,9 @@ node bin/uprint.js setup</pre>
           actually <em>send a job to it</em> from the command line? Didn't exist.
         </p>
         <p>
-          <code>Start-Process -Verb Print</code> opened Adobe Acrobat, left it running, printed to the
-          wrong printer, and gave no feedback. I couldn't even tell if my job was submitted, let alone
-          whether it was waiting for my badge tap at the printer.
+          I opened the PDF, clicked Print, selected the right printer, and confirmed. No error appeared,
+          but the document never printed. I couldn't even tell if my job was submitted, let alone whether
+          it was waiting for my badge tap at the printer.
         </p>
         <p>
           So I built uprint. A CLI that prints silently, targets the right printer, and speaks JSON
@@ -287,8 +287,8 @@ node bin/uprint.js setup</pre>
           <dt>Legible</dt>
           <dd>Every command reports where the job went, which engine sent it, and whether it is waiting on a badge.</dd>
 
-          <dt>Fallback</dt>
-          <dd>SumatraPDF, then Acrobat, then the OS print verb. The envelope names which one ran.</dd>
+          <dt>Fail closed</dt>
+          <dd>If the reliable engine is missing, uprint says so and names the install command. It never turns an unobservable handoff into success.</dd>
         </dl>
       </aside>
     </div>
@@ -531,7 +531,7 @@ node bin/uprint.js setup</pre>
       <ul>
         <li>Windows 10 or 11 with Node.js 20 or newer</li>
         <li>A printer the machine can already see, Universal Print or otherwise</li>
-        <li>Optional: SumatraPDF in <code>tools\</code> for fully silent printing. Without it, uprint falls back to Acrobat, then the OS print verb.</li>
+        <li>SumatraPDF in <code>tools\</code> for reliable silent printing. Install it with <code>npm run tools:sumatra</code>.</li>
       </ul>
     </div>
   </div>
