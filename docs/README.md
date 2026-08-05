@@ -148,21 +148,26 @@ block near the top of `index.html` saying the same thing in place.
 
 ### One open issue is not a string flip
 
-**Issue #29 makes JSON the default output.** If it lands, this page's framing
-inverts. It currently presents the tool as human-readable by default with
-`--json` as the opt-in for agents, which is true of the code today and is
-therefore *not* marked pending anywhere. Three things go stale at once:
+**Issue #29 made JSON the default output, and it has landed.** This page's
+framing inverted with it: it used to present the tool as human-readable by
+default with `--json` as the opt-in for agents. JSON is now the default and
+`--human` is the opt-out. All three of the things this section used to list
+as going stale have been updated:
 
-- the `--json` entry in the global flags list, which says it emits the envelope
-  "instead of human text"
-- the `jsonOutput` config row, described as a way to avoid passing `--json`
-  every time; the key becomes meaningless or inverts
-- the `--json` in the FIG. 1 stdout label and the sample commands, which become
-  redundant rather than wrong
+- the global flags list now leads with `--human` and records `--json` as
+  accepted but a no-op
+- the `jsonOutput` config row now documents unset as meaning JSON, with
+  `false` as the permanent human opt-out — and notes that `config get` still
+  reports `false` for an unset key, which is deliberate PowerShell parity and
+  pinned by a test, not a bug
+- the `--json` in the FIG. 1 stdout label and the sample commands is gone,
+  having become redundant rather than wrong
 
-Check the flag's real behaviour in `uprint.ps1` before editing, not the issue
-title. #29 was open and unmerged when this page was written, and an issue being
-open is not evidence about what the code does.
+The warning worth keeping past the issue it was written for: check the flag's
+real behaviour before editing, not the issue title. `uprint.ps1` no longer
+exists — the TypeScript port replaced it — which is itself an example of the
+point. An issue being open is not evidence about what the code does, and
+neither is an issue being closed.
 
 ### The exit-code copy is doomed in the other direction
 

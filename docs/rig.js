@@ -74,7 +74,7 @@
       rowCmd.classList.add('on');
       rowEnv.classList.add('on');
       rowState.classList.add('on');
-      cmd.textContent = 'uprint print ' + file + ' --json';
+      cmd.textContent = 'uprint print ' + file;
       env.innerHTML = ENV;
       state.textContent = 'RELEASED AT DEVICE';
       state.className = 'st-rel';
@@ -87,7 +87,7 @@
 
     at(150, function () {
       rowCmd.classList.add('on');
-      typeInto(cmd, 'uprint print ' + file + ' --json', 24);
+      typeInto(cmd, 'uprint print ' + file, 24);
     });
     at(1300, function () {
       rowEnv.classList.add('on');

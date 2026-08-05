@@ -84,22 +84,26 @@
 
   Those two are one-line flips. Issue #29 is NOT — read on.
 
-  ISSUE #29 (make JSON the default output) IS A CONTENT CHANGE, NOT A
-  STRING FLIP. This page currently frames the tool as human-readable by
-  default with --json as the opt-in for agents. If #29 lands, that
-  framing inverts: JSON becomes the default and --human becomes the
-  opt-out. Three things go stale, and none of them are marked pending
-  because they are true today:
+  ISSUE #29 (make JSON the default output) HAS LANDED, and it was a content
+  change rather than a string flip. This page used to frame the tool as
+  human-readable by default with --json as the opt-in for agents. That
+  framing is now inverted: JSON is the default and --human is the opt-out.
+  All three of the things this note used to list as going stale have been
+  updated:
 
-    - the <dt><code>--json</code></dt> entry in the global flags list,
-      which says it emits "instead of human text"
-    - the jsonOutput config row, which describes it as a way to avoid
-      passing --json each time; the key becomes meaningless or inverts
-    - the --json in the STDOUT label on the FIG. 1 rig, and in the
-      sample commands, which become redundant rather than wrong
+    - the global flags list now leads with --human and records --json as
+      accepted-but-a-no-op
+    - the jsonOutput config row now documents unset as meaning JSON, and
+      false as the permanent human opt-out, while noting that config get
+      still reports false for an unset key (PowerShell parity, pinned by
+      a test)
+    - the STDOUT label on the FIG. 1 rig and the sample commands no longer
+      pass --json, which had become redundant rather than wrong
 
-              Check the flag&rsquo;s real behaviour in src/ before editing, not the
-  issue title. #29 was open and unmerged when this page was written.
+  The warning that outlived the issue, and is the reason this paragraph is
+  kept rather than deleted: check the flag's real behaviour before editing,
+  not the issue title. An issue being open is not evidence about what the
+  code does, and neither is an issue being closed.
 
   ISSUE #35 (TypeScript port) INVERTS THE EXIT-CODE COPY, in the other
   direction. On master there is no exit statement anywhere in src/, so a
@@ -306,7 +310,7 @@ node bin/uprint.js setup</pre>
 
     <div class="envelope-grid">
       <div class="env-col">
-        <span class="tag">SUCCESS · uprint status --json</span>
+        <span class="tag">SUCCESS · uprint status</span>
         <pre class="code"><span class="p">{</span>
   <span class="k">"version"</span>: <span class="num">1</span>,
   <span class="k">"command"</span>: <span class="str">"status"</span>,
@@ -466,7 +470,7 @@ node bin/uprint.js setup</pre>
         <p class="kv-note">Stored at <code>%USERPROFILE%\.uprint\config.json</code></p>
         <dl class="kv">
           <dt><code>defaultPrinter</code></dt><dd>Target used when <code>--printer</code> is absent.</dd>
-        <dt><code>jsonOutput</code></dt><dd>Defaults to <code>true</code>. Set it to <code>false</code> to make every command behave as if <code>--human</code> were passed.</dd>
+        <dt><code>jsonOutput</code></dt><dd>Leave it unset and you get JSON, the default mode. Set it to <code>false</code> to make every command behave as if <code>--human</code> were passed. <code>config get</code> reports <code>false</code> for an unset key, kept for parity with the PowerShell CLI.</dd>
           <dt><code>autoWake</code></dt><dd>Default <code>true</code>.</dd>
           <dt><code>timeout</code></dt><dd>Default <code>10000</code>.</dd>
         </dl>
