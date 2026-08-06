@@ -157,9 +157,13 @@ as going stale have been updated:
 - the global flags list now leads with `--human` and records `--json` as
   accepted but a no-op
 - the `jsonOutput` config row now documents unset as meaning JSON, with
-  `false` as the permanent human opt-out — and notes that `config get` still
-  reports `false` for an unset key, which is deliberate PowerShell parity and
-  pinned by a test, not a bug
+  `false` as the permanent human opt-out. It used to add that `config get`
+  still reports `false` for an unset key, calling that deliberate PowerShell
+  parity, pinned by a test, and not a bug. It was a bug: #100 filed it and
+  #102 fixed it by deriving `CONFIG_DEFAULTS.jsonOutput` from `DEFAULT_MODE`,
+  so an unset key now reports `true`. The parity claim was true while human
+  was the default; #29 flipped the default and left the literal alone, which
+  preserved the value and destroyed the claim it was standing for
 - the `--json` in the FIG. 1 stdout label and the sample commands is gone,
   having become redundant rather than wrong
 
