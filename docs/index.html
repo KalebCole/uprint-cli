@@ -94,9 +94,17 @@
     - the global flags list now leads with --human and records --json as
       accepted-but-a-no-op
     - the jsonOutput config row now documents unset as meaning JSON, and
-      false as the permanent human opt-out, while noting that config get
-      still reports false for an unset key (PowerShell parity, pinned by
-      a test)
+      false as the permanent human opt-out. It used to add that config get
+      still reported false for an unset key (PowerShell parity, pinned by
+      a test). #100 removed that: CONFIG_DEFAULTS.jsonOutput is now derived
+      from DEFAULT_MODE, so an unset key reports true, and the row was
+      corrected here under #101.
+
+      Worth keeping, because it is the same failure as the exit-code list
+      below. The literal false was written when human WAS the default, so
+      the parity claim was true; #29 flipped the default and the literal
+      survived, preserving the VALUE and destroying the CLAIM. Parity with
+      a value is not parity with a claim, and only the value is greppable.
     - the STDOUT label on the FIG. 1 rig and the sample commands no longer
       pass --json, which had become redundant rather than wrong
 
@@ -105,27 +113,52 @@
   not the issue title. An issue being open is not evidence about what the
   code does, and neither is an issue being closed.
 
-  ISSUE #35 (TypeScript port) INVERTS THE EXIT-CODE COPY, in the other
-  direction. On master there is no exit statement anywhere in src/, so a
-  handled error emits success:false and the process still exits 0; only
-  an unknown command exits 1. The page says exactly that, in the
-  "Success is the signal" contract item and the exit-code list.
+  ISSUE #35 (TypeScript port) INVERTED THE EXIT-CODE COPY, and this page
+  shipped the falsification it had already written down. Before the port
+  there was no exit statement anywhere in src/, so a handled error emitted
+  success:false and the process still exited 0; only an unknown command
+  exited 1. The page said exactly that, in the "Success is the signal"
+  contract item and the exit-code list.
 
-  The port replaces that. src/lib/render.ts on the port branch:
+  The port replaced that. src/lib/render.ts, now on master:
 
       export function exitCodeFor(result: CommandResult): ExitCode {
         if (result.exitCode !== undefined) return result.exitCode;
         return result.error ? EXIT_ERROR : EXIT_SUCCESS;
       }
 
-  No mode parameter, so any errored result exits 1. When #35 lands, the
-  "still exits 0" clause becomes wrong and exit 1 goes back to reading
-  as a general error.
+  No mode parameter, so any errored result exits 1, and 3 is reached only
+  where a command opts into it explicitly at argument, option or config
+  validation (cli.ts:467 is the split: unknown command takes EXIT_ERROR,
+  malformed option takes EXIT_INVALID_INPUT). Corrected under #101 against
+  a probe of bin/uprint.js in this tree, on an isolated USERPROFILE.
 
-  Note the direction. That copy is accurate today and the merge queue
-  breaks it. The data-release="pending" markers cannot express this,
-  because they only flag what is already false. A claim can be true,
-  unmarked, and doomed at the same time.
+  Note the direction, and note what it cost. That copy was accurate when
+  written and the merge queue broke it. The paragraph above predicted the
+  break and named the PR that would cause it, and the page still served the
+  false claim for the whole interval, because a prediction in prose and a
+  correction in markup are not connected by anything. The data-release
+  markers cannot express it either; they only flag what is already false.
+  A claim can be true, unmarked, and doomed at the same time, and writing
+  that sentence down does not schedule the edit it implies.
+
+  A SECOND ERROR IN THE SAME LIST, older than #35 and independent of it:
+  "3, invalid input, such as a missing file argument" named the wrong code.
+  A missing FILE exits 1 (FILE_NOT_FOUND, measured on a configured profile);
+  it is a missing ARGUMENT that exits 3. The example straddled the exact
+  boundary it was meant to illustrate, so it read as correct from either
+  side, and it survived every review that only checked the #35 direction.
+
+  It also survived the probe in #101's own report, which ran unconfigured:
+  the first-run guard returns NOT_CONFIGURED before any command-level check,
+  so the row labelled "print <missing file>" measured the guard, not the
+  missing file. Right exit code, wrong cause, and the label was the only
+  record of which one was intended. When a probe row is named for its
+  intent, verify the error code too, not just the exit status.
+
+  The durable form for this list: these rows are derivable from a probe, so
+  re-derive them when the binary changes rather than annotating them with a
+  prediction.
   ===================================================================
 -->
 
@@ -358,7 +391,7 @@ node bin/uprint.js setup</pre>
       </div>
       <div class="contract-item">
         <h4>Success is the signal</h4>
-        <p>Branch on <code>success</code>, not the exit code. Every result exits <code>0</code> &mdash; a handled error and an unknown command alike. The envelope carries the outcome.</p>
+        <p>Branch on <code>success</code>, not the exit code. The exit code tells you <em>that</em> a call failed; only the envelope tells you <em>why</em>, in an <code>error.code</code> you can switch on. A failed print and an unknown command both exit <code>1</code>.</p>
       </div>
     </div>
 
@@ -460,9 +493,9 @@ node bin/uprint.js setup</pre>
       <div class="glob-col">
         <h4>Exit codes</h4>
         <dl class="kv">
-          <dt><code>0</code></dt><dd>Success &mdash; and also a handled error, which reports itself in the envelope. Check <code>success</code>.</dd>
-          <dt><code>1</code></dt><dd>Unknown command.</dd>
-          <dt><code>3</code></dt><dd>Invalid input, such as a missing file argument.</dd>
+          <dt><code>0</code></dt><dd>The command succeeded.</dd>
+          <dt><code>1</code></dt><dd>Any errored result: a failed operation such as <code>FILE_NOT_FOUND</code> or <code>NOT_CONFIGURED</code>, and an unknown <em>command</em>, alike.</dd>
+          <dt><code>3</code></dt><dd>Invalid input, rejected before the command runs: an unknown <em>option</em>, a missing required argument, or an unparseable value such as <code>--copies foo</code>.</dd>
         </dl>
       </div>
       <div class="glob-col">
@@ -470,9 +503,9 @@ node bin/uprint.js setup</pre>
         <p class="kv-note">Stored at <code>%USERPROFILE%\.uprint\config.json</code></p>
         <dl class="kv">
           <dt><code>defaultPrinter</code></dt><dd>Target used when <code>--printer</code> is absent.</dd>
-        <dt><code>jsonOutput</code></dt><dd>Leave it unset and you get JSON, the default mode. Set it to <code>false</code> to make every command behave as if <code>--human</code> were passed. <code>config get</code> reports <code>false</code> for an unset key, kept for parity with the PowerShell CLI.</dd>
+        <dt><code>jsonOutput</code></dt><dd>Leave it unset and you get JSON, the default mode. Set it to <code>false</code> to make every command behave as if <code>--human</code> were passed. <code>config get</code> reports <code>true</code> for an unset key, matching the mode you actually get.</dd>
           <dt><code>autoWake</code></dt><dd>Default <code>true</code>.</dd>
-          <dt><code>timeout</code></dt><dd>Default <code>10000</code>.</dd>
+          <dt><code>timeoutMs</code></dt><dd>Print-engine timeout in milliseconds. Default <code>30000</code>.</dd>
         </dl>
       </div>
     </div>
@@ -551,17 +584,9 @@ node bin/uprint.js setup</pre>
     <ul class="limit-list">
       <li>
         <strong>Submitted is not printed.</strong>
-        A successful envelope means the job reached the spooler or the cloud queue. It is not proof
-        that paper came out. The print engine's exit code is not yet checked.
-      </li>
-      <li>
-        <strong>Print options are recorded, not yet enforced.</strong>
-        <code>--duplex</code>, <code>--color</code> and <code>--mono</code> are echoed back in the
-        envelope, but the underlying engine does not apply them.
-      </li>
-      <li>
-        <strong><code>config get</code> ignores its key.</strong>
-        It returns the entire config regardless of what you ask for.
+        A non-zero exit from the print engine is surfaced as a failure envelope, but a clean exit
+        only means the job reached the spooler or the cloud queue. It is still not proof that paper
+        came out.
       </li>
       <li>
         <strong>Windows only.</strong>
@@ -570,7 +595,7 @@ node bin/uprint.js setup</pre>
       </li>
     </ul>
     <p class="limit-foot">
-      All four are tracked in the issue tracker. If one of them is in your way,
+      Both are tracked in the issue tracker. If one of them is in your way,
       <a href="https://github.com/kalebcole/uprint-cli/issues">say so there</a>.
     </p>
   </div>
