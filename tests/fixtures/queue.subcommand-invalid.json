@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Unknown queue subcommand: remove",
+    "suggestion": "Use 'uprint queue' or 'uprint queue cancel'"
+  }
+}

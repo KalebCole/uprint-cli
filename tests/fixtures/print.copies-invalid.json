@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "--copies requires a positive integer",
+    "suggestion": "Use '--copies <count>' with a value of 1 or more"
+  }
+}

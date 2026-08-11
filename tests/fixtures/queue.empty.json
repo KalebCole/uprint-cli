@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "jobs": [],
+    "count": 0,
+    "printer": "Office UP"
+  }
+}

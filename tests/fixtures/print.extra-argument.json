@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Unexpected argument: extra",
+    "suggestion": "Run 'uprint --help' for usage"
+  }
+}

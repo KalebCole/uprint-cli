@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "A job ID and --all are mutually exclusive",
+    "suggestion": "Use one cancellation selector"
+  }
+}

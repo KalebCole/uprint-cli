@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "setup",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "NO_PRINTERS",
+    "message": "No printers found on this system",
+    "suggestion": "Add a printer in Windows Settings first"
+  }
+}

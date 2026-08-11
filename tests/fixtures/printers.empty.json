@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "command": "printers",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "printers": [],
+    "count": 0
+  }
+}

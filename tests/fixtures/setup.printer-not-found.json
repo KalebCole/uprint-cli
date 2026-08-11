@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "setup",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "PRINTER_NOT_FOUND",
+    "message": "Specified printer was not found",
+    "suggestion": "Run 'uprint printers' to list available printers"
+  }
+}

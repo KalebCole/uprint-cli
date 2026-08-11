@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "print requires a file path",
+    "suggestion": "Use 'uprint print <file>'"
+  }
+}

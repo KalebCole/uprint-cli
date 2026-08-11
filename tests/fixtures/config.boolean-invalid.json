@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "config",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Invalid value for jsonOutput: maybe",
+    "suggestion": "Use true or false"
+  }
+}

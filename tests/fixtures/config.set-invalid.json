@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "config",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "config set requires a key and value",
+    "suggestion": "Use 'uprint config set <key> <value>'"
+  }
+}

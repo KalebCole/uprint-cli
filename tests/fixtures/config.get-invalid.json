@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "config",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "config get does not accept a key",
+    "suggestion": "Use 'uprint config get'"
+  }
+}

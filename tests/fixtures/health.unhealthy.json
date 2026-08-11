@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "command": "health",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "printer": "Office UP",
+    "healthy": false,
+    "checks": [
+      {
+        "name": "Print Spooler",
+        "status": "FAIL",
+        "detail": "Stopped"
+      },
+      {
+        "name": "Printer Status",
+        "status": "PASS",
+        "detail": "Normal"
+      },
+      {
+        "name": "Queue Backlog",
+        "status": "PASS",
+        "detail": "1 jobs"
+      },
+      {
+        "name": "Universal Print",
+        "status": "PASS",
+        "detail": "UP driver detected"
+      }
+    ]
+  },
+  "warnings": [
+    "Print Spooler: Stopped"
+  ]
+}

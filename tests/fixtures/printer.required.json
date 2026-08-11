@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "status",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "No printer selected",
+    "suggestion": "Use --printer <name> or run 'uprint setup'"
+  }
+}

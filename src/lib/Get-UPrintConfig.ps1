@@ -13,12 +13,16 @@ function Get-UPrintConfig {
 
     if (Test-Path $configPath) {
         try {
-            $fileConfig = Get-Content $configPath -Raw | ConvertFrom-Json -AsHashtable
-            foreach ($key in $fileConfig.Keys) {
-                $defaults[$key] = $fileConfig[$key]
+            $fileConfig = Get-Content $configPath -Raw | ConvertFrom-Json
+            foreach ($property in $fileConfig.PSObject.Properties) {
+                if ($defaults.ContainsKey($property.Name)) {
+                    $defaults[$property.Name] = $property.Value
+                }
             }
         } catch {
-            Write-Warning "Failed to parse config at $configPath, using defaults"
+            [Console]::Error.WriteLine(
+                "Warning: Failed to parse config at $configPath, using defaults"
+            )
         }
     }
 
@@ -29,7 +33,7 @@ function Set-UPrintConfig {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$Key,
-        [Parameter(Mandatory)][string]$Value
+        [Parameter(Mandatory)][object]$Value
     )
 
     $configDir = Join-Path $env:USERPROFILE '.uprint'
@@ -39,15 +43,17 @@ function Set-UPrintConfig {
         New-Item -ItemType Directory -Path $configDir -Force | Out-Null
     }
 
-    $config = @{}
-    if (Test-Path $configPath) {
-        $config = Get-Content $configPath -Raw | ConvertFrom-Json -AsHashtable
-    }
+    $config = Get-UPrintConfig
 
-    # Type coercion: booleans and integers
-    if ($Value -eq 'true') { $Value = $true }
-    elseif ($Value -eq 'false') { $Value = $false }
-    elseif ($Value -match '^\d+$') { $Value = [int]$Value }
+    if ($Key -in @('autoWake', 'jsonOutput')) {
+        $Value = $Value -eq 'true'
+    }
+    elseif ($Key -eq 'timeout') {
+        $Value = [int]$Value
+    }
+    else {
+        $Value = [string]$Value
+    }
 
     $config[$Key] = $Value
     $config | ConvertTo-Json -Depth 5 | Set-Content $configPath

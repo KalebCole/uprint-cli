@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "cancelled": 1,
+    "printer": "Office UP"
+  }
+}

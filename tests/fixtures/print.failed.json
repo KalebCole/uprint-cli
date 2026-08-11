@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "PRINT_FAILED",
+    "message": "Fixture print failure",
+    "suggestion": "Run 'uprint status --printer Local Printer' to check"
+  }
+}

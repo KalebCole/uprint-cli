@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "command": "config",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "defaultPrinter": "123",
+    "autoWake": true,
+    "timeout": 10000,
+    "jsonOutput": false
+  }
+}

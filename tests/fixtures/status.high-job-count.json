@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "command": "status",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "name": "Office UP",
+    "status": "Normal",
+    "driver": "Universal Print Class Driver",
+    "port": "PORT-UP",
+    "type": "Local",
+    "shared": false,
+    "pendingJobs": 6,
+    "isUP": true
+  },
+  "warnings": [
+    "High job count: 6 pending"
+  ]
+}

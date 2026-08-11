@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Print job ID must be a positive integer",
+    "suggestion": "Use 'uprint queue cancel <job-id>' with a value of 1 or more"
+  }
+}

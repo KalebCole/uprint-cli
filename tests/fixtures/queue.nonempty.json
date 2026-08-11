@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "jobs": [
+      {
+        "id": 7,
+        "document": "report.pdf",
+        "status": "Spooling",
+        "user": "fixture-user",
+        "submitted": "2026-01-02T03:04:05.0000000+00:00"
+      }
+    ],
+    "count": 1,
+    "printer": "Office UP"
+  }
+}

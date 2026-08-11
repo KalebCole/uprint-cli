@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "config",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Invalid value for timeout: nope",
+    "suggestion": "Use a nonnegative integer"
+  }
+}

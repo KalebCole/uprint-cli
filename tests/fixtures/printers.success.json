@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "command": "printers",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "printers": [
+      {
+        "name": "Office UP",
+        "type": "Local",
+        "driver": "Universal Print Class Driver",
+        "status": "Normal",
+        "isUP": true
+      },
+      {
+        "name": "Local Printer",
+        "type": "Local",
+        "driver": "Contoso Laser",
+        "status": "Normal",
+        "isUP": false
+      }
+    ],
+    "count": 2
+  }
+}

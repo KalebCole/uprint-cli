@@ -1,4 +1,5 @@
 BeforeAll {
+    . "$PSScriptRoot/Test-WindowsCommandStubs.ps1"
     . "$PSScriptRoot/../src/lib/Format-UPrintOutput.ps1"
     . "$PSScriptRoot/../src/lib/New-UPrintError.ps1"
     . "$PSScriptRoot/../src/commands/Get-UPrintQueue.ps1"

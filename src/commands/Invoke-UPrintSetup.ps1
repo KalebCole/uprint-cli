@@ -1,11 +1,9 @@
 function Invoke-UPrintSetup {
     [CmdletBinding()]
     param(
+        [string]$PrinterName,
         [switch]$Json
     )
-
-    Write-Host "uprint setup — Printer Discovery" -ForegroundColor Cyan
-    Write-Host ""
 
     # Discover printers
     $printers = @(Get-Printer | Where-Object { $_.Name -notmatch '\(redirected' })
@@ -16,6 +14,31 @@ function Invoke-UPrintSetup {
         Write-Error "No printers found. Add a printer in Windows Settings first."
         return
     }
+
+    if ($Json) {
+        if (-not $PrinterName) {
+            $err = New-UPrintError -Code 'INVALID_ARGUMENT' -Message 'setup requires --printer in JSON mode' -Suggestion "Use 'uprint setup --printer <name> --json'"
+            return Format-UPrintOutput -Command 'setup' -ErrorResult $err -Json
+        }
+
+        $selected = $printers | Where-Object Name -eq $PrinterName | Select-Object -First 1
+        if (-not $selected) {
+            $err = New-UPrintError -Known 'PRINTER_NOT_FOUND'
+            return Format-UPrintOutput -Command 'setup' -ErrorResult $err -Json
+        }
+
+        $config = Set-UPrintConfig -Key 'defaultPrinter' -Value $selected.Name
+        $data = @{
+            defaultPrinter = $selected.Name
+            driver         = $selected.DriverName
+            isUP           = ($selected.DriverName -match 'Universal Print')
+            config         = $config
+        }
+        return Format-UPrintOutput -Command 'setup' -Data $data -Json
+    }
+
+    Write-Host "uprint setup — Printer Discovery" -ForegroundColor Cyan
+    Write-Host ""
 
     # Display printers with numbers
     Write-Host "Available printers:" -ForegroundColor Yellow
@@ -39,10 +62,6 @@ function Invoke-UPrintSetup {
             driver         = $selected.DriverName
             isUP           = ($selected.DriverName -match 'Universal Print')
             config         = $config
-        }
-
-        if ($Json) {
-            return Format-UPrintOutput -Command 'setup' -Data $data -Json
         }
 
         Write-Host ""

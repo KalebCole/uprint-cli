@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "file": "<file>",
+    "printer": "Office UP",
+    "copies": 2,
+    "color": "Mono",
+    "duplex": true,
+    "status": "submitted_to_cloud",
+    "engine": "SumatraPDF"
+  },
+  "warnings": [
+    "Universal Print: job held in cloud until badge release at printer"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "printers",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "LIST_FAILED",
+    "message": "Fixture printer-list failure",
+    "suggestion": "Check print spooler service"
+  }
+}

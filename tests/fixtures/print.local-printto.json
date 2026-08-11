@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "file": "<file>",
+    "printer": "Local Printer",
+    "copies": 1,
+    "color": "Color",
+    "duplex": false,
+    "status": "submitted",
+    "engine": "PrintTo"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "setup",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "setup requires --printer in JSON mode",
+    "suggestion": "Use 'uprint setup --printer <name> --json'"
+  }
+}

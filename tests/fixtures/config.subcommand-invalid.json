@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "config",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Unknown config subcommand: remove",
+    "suggestion": "Use 'uprint config get' or 'uprint config set'"
+  }
+}

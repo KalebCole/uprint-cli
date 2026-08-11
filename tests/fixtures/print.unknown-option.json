@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Unknown option: --bogus",
+    "suggestion": "Run 'uprint --help' for usage"
+  }
+}

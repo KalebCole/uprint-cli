@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "print",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "FILE_NOT_FOUND",
+    "message": "File to print was not found",
+    "suggestion": "Check the file path and try again"
+  }
+}

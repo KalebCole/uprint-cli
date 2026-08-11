@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "config",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Unknown configuration key: extra",
+    "suggestion": "Use defaultPrinter, autoWake, timeout, or jsonOutput"
+  }
+}

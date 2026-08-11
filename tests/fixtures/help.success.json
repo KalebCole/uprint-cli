@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "command": "help",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "usage": "uprint <command> [options]",
+    "commands": [
+      "setup",
+      "printers",
+      "status",
+      "print",
+      "queue",
+      "health",
+      "config"
+    ],
+    "globalOptions": [
+      "--json",
+      "--printer <name>",
+      "--help"
+    ]
+  }
+}

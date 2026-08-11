@@ -1,0 +1,792 @@
+kind: uprint-cli-contract
+contractVersion: 1
+
+platform:
+  operatingSystem:
+    family: Windows
+    supportedVersions:
+      - "10"
+      - "11"
+  powershell:
+    minimumDesktopVersion: "5.1"
+    minimumCoreVersion: "7.0"
+  printManagement:
+    requiredCommands:
+      - Get-Printer
+      - Get-PrintJob
+      - Remove-PrintJob
+  spoolerService: Spooler
+
+configuration:
+  path: "%USERPROFILE%\\.uprint\\config.json"
+  type: object
+  required:
+    - defaultPrinter
+    - autoWake
+    - timeout
+    - jsonOutput
+  additionalProperties: false
+  properties:
+    defaultPrinter:
+      type:
+        - string
+        - "null"
+      default: null
+    autoWake:
+      type: boolean
+      default: true
+    timeout:
+      type: integer
+      minimum: 0
+      default: 10000
+    jsonOutput:
+      type: boolean
+      default: false
+  setValueCoercion:
+    boolean:
+      fields:
+        - autoWake
+        - jsonOutput
+      trueText: "true"
+      falseText: "false"
+    integer:
+      fields:
+        - timeout
+      pattern: "^\\d+$"
+    string:
+      fields:
+        - defaultPrinter
+
+globalOptions:
+  json:
+    flags:
+      - --json
+    type: boolean
+    default: false
+    effect: Emit one JSON envelope on standard output.
+  printer:
+    flags:
+      - --printer
+    type: string
+    valueRequired: true
+    effect: Use this printer instead of configuration.defaultPrinter.
+  help:
+    flags:
+      - --help
+    type: boolean
+    default: false
+    effect: Return help data.
+
+printerResolution:
+  order:
+    - globalOptions.printer
+    - configuration.defaultPrinter
+  commandsWithoutPrinter:
+    - help
+    - setup
+    - printers
+    - config
+  missingPrinter:
+    error: INVALID_ARGUMENT
+    exitCode: 3
+
+argumentRules:
+  unknownOption:
+    error: INVALID_ARGUMENT
+    exitCode: 3
+  missingValue:
+    error: INVALID_ARGUMENT
+    exitCode: 3
+  extraArgument:
+    error: INVALID_ARGUMENT
+    exitCode: 3
+  mutuallyExclusiveOptions:
+    error: INVALID_ARGUMENT
+    exitCode: 3
+  incompleteSubcommand:
+    error: INVALID_ARGUMENT
+    exitCode: 3
+
+jsonEnvelope:
+  version: 1
+  stdoutDocuments: 1
+  humanTextOnStdout: false
+  success:
+    type: object
+    required:
+      - version
+      - command
+      - timestamp
+      - success
+      - data
+    additionalProperties: false
+    properties:
+      version:
+        type: integer
+        const: 1
+      command:
+        type: string
+        enum:
+          - help
+          - setup
+          - printers
+          - status
+          - print
+          - queue
+          - health
+          - config
+      timestamp:
+        type: string
+        format: date-time
+      success:
+        type: boolean
+        const: true
+      data:
+        type: object
+      warnings:
+        type: array
+        items:
+          type: string
+  error:
+    type: object
+    required:
+      - version
+      - command
+      - timestamp
+      - success
+      - error
+    additionalProperties: false
+    properties:
+      version:
+        type: integer
+        const: 1
+      command:
+        type: string
+      timestamp:
+        type: string
+        format: date-time
+      success:
+        type: boolean
+        const: false
+      error:
+        type: object
+        required:
+          - code
+          - message
+          - suggestion
+        additionalProperties: false
+        properties:
+          code:
+            type: string
+          message:
+            type: string
+          suggestion:
+            type:
+              - string
+              - "null"
+
+errors:
+  INVALID_ARGUMENT:
+    exitCode: 3
+    meaning: The command grammar or value is invalid.
+  FILE_NOT_FOUND:
+    exitCode: 3
+    meaning: The print input file does not exist.
+  PRINT_FAILED:
+    exitCode: 1
+    meaning: U-Print could not submit the document to a print engine.
+  PRINTER_NOT_FOUND:
+    exitCode: 1
+    meaning: The selected printer is not installed.
+  QUEUE_ERROR:
+    exitCode: 1
+    meaning: U-Print could not read or change the queue.
+  NO_PRINTERS:
+    exitCode: 1
+    meaning: Setup found no installed printers.
+  LIST_FAILED:
+    exitCode: 1
+    meaning: U-Print could not list installed printers.
+
+exitCodes:
+  "0": success
+  "1": operational-error
+  "3": invalid-input
+
+commands:
+  help:
+    grammar:
+      - uprint --help
+      - uprint
+    output:
+      data:
+        type: object
+        required:
+          - usage
+          - commands
+          - globalOptions
+        additionalProperties: false
+        properties:
+          usage:
+            type: string
+          commands:
+            type: array
+            items:
+              type: string
+          globalOptions:
+            type: array
+            items:
+              type: string
+    errors: []
+    sideEffects: []
+
+  setup:
+    grammar:
+      human: uprint setup
+      json: uprint setup --printer <name> [--json]
+    modes:
+      human:
+        interactive: true
+        condition: JSON output is not enabled.
+      json:
+        interactive: false
+        enabledBy:
+          - --json
+          - configuration.jsonOutput
+        requiredGlobalOptions:
+          - printer
+    output:
+      data:
+        type: object
+        required:
+          - defaultPrinter
+          - driver
+          - isUP
+          - config
+        additionalProperties: false
+        properties:
+          defaultPrinter:
+            type: string
+          driver:
+            type: string
+          isUP:
+            type: boolean
+          config:
+            contract: configuration
+    errors:
+      - INVALID_ARGUMENT
+      - NO_PRINTERS
+      - PRINTER_NOT_FOUND
+    sideEffects:
+      - Write configuration.defaultPrinter.
+
+  printers:
+    grammar: uprint printers [--universal-only|-u]
+    options:
+      universalOnly:
+        flags:
+          - --universal-only
+          - -u
+        type: boolean
+        default: false
+    output:
+      data:
+        type: object
+        required:
+          - printers
+          - count
+        additionalProperties: false
+        properties:
+          printers:
+            type: array
+            items:
+              type: object
+              required:
+                - name
+                - type
+                - driver
+                - status
+                - isUP
+              additionalProperties: false
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                driver:
+                  type: string
+                status:
+                  type: string
+                isUP:
+                  type: boolean
+          count:
+            type: integer
+            minimum: 0
+      warnings: []
+    behavior:
+      excludePrinterNamePattern: "\\(redirected"
+      universalPrintDriverPattern: Universal Print
+    errors:
+      - INVALID_ARGUMENT
+      - LIST_FAILED
+    sideEffects:
+      - Read installed printers.
+
+  status:
+    grammar: uprint status
+    printerRequired: true
+    output:
+      data:
+        type: object
+        required:
+          - name
+          - status
+          - driver
+          - port
+          - type
+          - shared
+          - pendingJobs
+          - isUP
+        additionalProperties: false
+        properties:
+          name:
+            type: string
+          status:
+            type: string
+          driver:
+            type: string
+          port:
+            type: string
+          type:
+            type: string
+          shared:
+            type: boolean
+          pendingJobs:
+            type: integer
+            minimum: 0
+          isUP:
+            type: boolean
+      warnings:
+        - id: high-job-count
+          condition: data.pendingJobs > 5
+          message: "High job count: <pendingJobs> pending"
+    errors:
+      - INVALID_ARGUMENT
+      - PRINTER_NOT_FOUND
+    sideEffects:
+      - Read one installed printer.
+      - Read its queue.
+
+  print:
+    grammar: uprint print <file> [--copies <count>] [--duplex] [--color|--mono]
+    printerRequired: true
+    positionals:
+      file:
+        type: string
+        required: true
+    options:
+      copies:
+        flags:
+          - --copies
+        type: integer
+        minimum: 1
+        default: 1
+        valueRequired: true
+      duplex:
+        flags:
+          - --duplex
+        type: boolean
+        default: false
+      color:
+        flags:
+          - --color
+        type: boolean
+        default: true
+        mutuallyExclusiveWith:
+          - mono
+      mono:
+        flags:
+          - --mono
+        type: boolean
+        default: false
+        mutuallyExclusiveWith:
+          - color
+    output:
+      data:
+        type: object
+        required:
+          - file
+          - printer
+          - copies
+          - color
+          - duplex
+          - status
+          - engine
+        additionalProperties: false
+        properties:
+          file:
+            type: string
+            meaning: Absolute input path.
+          printer:
+            type: string
+          copies:
+            type: integer
+            minimum: 1
+            meaning: Requested copy count.
+          color:
+            type: string
+            enum:
+              - Color
+              - Mono
+            meaning: Requested color mode.
+          duplex:
+            type: boolean
+            meaning: Requested duplex mode.
+          status:
+            type: string
+            enum:
+              - submitted
+              - submitted_to_cloud
+          engine:
+            type: string
+            enum:
+              - SumatraPDF
+              - Acrobat
+              - PrintTo
+      warnings:
+        - id: universal-print-release
+          condition: data.status == submitted_to_cloud
+          message: "Universal Print: job held in cloud until badge release at printer"
+    errors:
+      - INVALID_ARGUMENT
+      - FILE_NOT_FOUND
+      - PRINT_FAILED
+    sideEffects:
+      - Read one installed printer.
+      - Start one print engine.
+
+  queue:
+    printerRequired: true
+    variants:
+      list:
+        grammar: uprint queue
+        output:
+          data:
+            type: object
+            required:
+              - jobs
+              - count
+              - printer
+            additionalProperties: false
+            properties:
+              jobs:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - id
+                    - document
+                    - status
+                    - user
+                    - submitted
+                  additionalProperties: false
+                  properties:
+                    id:
+                      type: integer
+                    document:
+                      type: string
+                    status:
+                      type: string
+                    user:
+                      type: string
+                    submitted:
+                      type: string
+                      format: date-time
+              count:
+                type: integer
+                minimum: 0
+              printer:
+                type: string
+        sideEffects:
+          - Read one queue.
+      cancelOne:
+        grammar: uprint queue cancel <job-id>
+        positionals:
+          jobId:
+            type: integer
+            minimum: 1
+            required: true
+        output:
+          data:
+            type: object
+            required:
+              - cancelled
+              - printer
+            additionalProperties: false
+            properties:
+              cancelled:
+                type: integer
+                minimum: 1
+                meaning: Cancelled job ID.
+              printer:
+                type: string
+        safeguard: A positive job ID is required.
+        sideEffects:
+          - Remove one print job.
+      cancelAll:
+        grammar: uprint queue cancel --all
+        options:
+          all:
+            flags:
+              - --all
+            type: boolean
+            const: true
+        output:
+          data:
+            type: object
+            required:
+              - cancelled
+              - printer
+            additionalProperties: false
+            properties:
+              cancelled:
+                type: integer
+                minimum: 0
+                meaning: Number of cancelled jobs.
+              printer:
+                type: string
+        safeguard: The exact --all option is required.
+        confirmation: false
+        sideEffects:
+          - Remove all print jobs from one queue.
+    variantRules:
+      jobIdAndAllMutuallyExclusive: true
+    errors:
+      - INVALID_ARGUMENT
+      - QUEUE_ERROR
+
+  health:
+    grammar: uprint health
+    printerRequired: true
+    output:
+      data:
+        type: object
+        required:
+          - printer
+          - healthy
+          - checks
+        additionalProperties: false
+        properties:
+          printer:
+            type: string
+          healthy:
+            type: boolean
+          checks:
+            type: array
+            items:
+              type: object
+              required:
+                - name
+                - status
+                - detail
+              additionalProperties: false
+              properties:
+                name:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - PASS
+                    - FAIL
+                    - WARN
+                    - INFO
+                    - SKIP
+                detail:
+                  type: string
+      warnings:
+        - id: failed-or-warning-check
+          condition: check.status in [FAIL, WARN]
+          message: "<check.name>: <check.detail>"
+    errors:
+      - INVALID_ARGUMENT
+    sideEffects:
+      - Read the Spooler service.
+      - Read one installed printer.
+      - Read its queue.
+
+  config:
+    variants:
+      get:
+        grammar:
+          - uprint config
+          - uprint config get
+        output:
+          data:
+            contract: configuration
+        sideEffects:
+          - Read the configuration file.
+      set:
+        grammar: uprint config set <key> <value>
+        positionals:
+          key:
+            type: string
+            enum:
+              - defaultPrinter
+              - autoWake
+              - timeout
+              - jsonOutput
+            required: true
+          value:
+            type: string
+            required: true
+        output:
+          data:
+            contract: configuration
+        sideEffects:
+          - Write the configuration file.
+    errors:
+      - INVALID_ARGUMENT
+
+printSubmission:
+  meaning: Transfer a document to a print engine without an observed error.
+  physicalOutputObserved: false
+  universalPrint:
+    detection:
+      field: installedPrinter.driverName
+      pattern: Universal Print
+    status: submitted_to_cloud
+  otherPrinter:
+    status: submitted
+  engines:
+    order:
+      - SumatraPDF
+      - Acrobat
+      - PrintTo
+    SumatraPDF:
+      executableOrder:
+        - tools\\SumatraPDF-3.5.2-64.exe
+        - tools\\SumatraPDF.exe
+      appliedOptions:
+        - printer
+        - copies
+      reportedOnlyOptions:
+        - color
+        - duplex
+    Acrobat:
+      executable: "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe"
+      appliedOptions:
+        - printer
+      reportedOnlyOptions:
+        - copies
+        - color
+        - duplex
+    PrintTo:
+      mechanism: Windows PrintTo verb
+      appliedOptions:
+        - printer
+      reportedOnlyOptions:
+        - copies
+        - color
+        - duplex
+
+fixtures:
+  - id: help.success
+    path: tests/fixtures/help.success.json
+  - id: arguments.invalid
+    path: tests/fixtures/arguments.invalid.json
+  - id: arguments.unknown-option
+    path: tests/fixtures/arguments.unknown-option.json
+  - id: printer.required
+    path: tests/fixtures/printer.required.json
+  - id: printer.value-invalid
+    path: tests/fixtures/printer.value-invalid.json
+  - id: setup.success
+    path: tests/fixtures/setup.success.json
+  - id: setup.no-printers
+    path: tests/fixtures/setup.no-printers.json
+  - id: setup.printer-required
+    path: tests/fixtures/setup.printer-required.json
+  - id: setup.printer-not-found
+    path: tests/fixtures/setup.printer-not-found.json
+  - id: setup.extra-argument
+    path: tests/fixtures/setup.extra-argument.json
+  - id: printers.success
+    path: tests/fixtures/printers.success.json
+  - id: printers.universal-only
+    path: tests/fixtures/printers.universal-only.json
+  - id: printers.empty
+    path: tests/fixtures/printers.empty.json
+  - id: printers.failed
+    path: tests/fixtures/printers.failed.json
+  - id: printers.unknown-option
+    path: tests/fixtures/printers.unknown-option.json
+  - id: status.success
+    path: tests/fixtures/status.success.json
+  - id: status.high-job-count
+    path: tests/fixtures/status.high-job-count.json
+  - id: status.not-found
+    path: tests/fixtures/status.not-found.json
+  - id: print.universal-sumatra
+    path: tests/fixtures/print.universal-sumatra.json
+  - id: print.local-acrobat
+    path: tests/fixtures/print.local-acrobat.json
+  - id: print.local-printto
+    path: tests/fixtures/print.local-printto.json
+  - id: print.file-not-found
+    path: tests/fixtures/print.file-not-found.json
+  - id: print.file-required
+    path: tests/fixtures/print.file-required.json
+  - id: print.failed
+    path: tests/fixtures/print.failed.json
+  - id: print.copies-invalid
+    path: tests/fixtures/print.copies-invalid.json
+  - id: print.color-invalid
+    path: tests/fixtures/print.color-invalid.json
+  - id: print.unknown-option
+    path: tests/fixtures/print.unknown-option.json
+  - id: print.extra-argument
+    path: tests/fixtures/print.extra-argument.json
+  - id: queue.nonempty
+    path: tests/fixtures/queue.nonempty.json
+  - id: queue.empty
+    path: tests/fixtures/queue.empty.json
+  - id: queue.cancel-one
+    path: tests/fixtures/queue.cancel-one.json
+  - id: queue.cancel-all
+    path: tests/fixtures/queue.cancel-all.json
+  - id: queue.cancel-invalid
+    path: tests/fixtures/queue.cancel-invalid.json
+  - id: queue.cancel-conflict
+    path: tests/fixtures/queue.cancel-conflict.json
+  - id: queue.job-id-invalid
+    path: tests/fixtures/queue.job-id-invalid.json
+  - id: queue.extra-argument
+    path: tests/fixtures/queue.extra-argument.json
+  - id: queue.subcommand-invalid
+    path: tests/fixtures/queue.subcommand-invalid.json
+  - id: queue.error
+    path: tests/fixtures/queue.error.json
+  - id: health.healthy
+    path: tests/fixtures/health.healthy.json
+  - id: health.unhealthy
+    path: tests/fixtures/health.unhealthy.json
+  - id: health.unknown-option
+    path: tests/fixtures/health.unknown-option.json
+  - id: config.get
+    path: tests/fixtures/config.get.json
+  - id: config.get-invalid
+    path: tests/fixtures/config.get-invalid.json
+  - id: config.key-invalid
+    path: tests/fixtures/config.key-invalid.json
+  - id: config.set
+    path: tests/fixtures/config.set.json
+  - id: config.default-printer
+    path: tests/fixtures/config.default-printer.json
+  - id: config.set-invalid
+    path: tests/fixtures/config.set-invalid.json
+  - id: config.value-invalid
+    path: tests/fixtures/config.value-invalid.json
+  - id: config.boolean-invalid
+    path: tests/fixtures/config.boolean-invalid.json
+  - id: config.subcommand-invalid
+    path: tests/fixtures/config.subcommand-invalid.json

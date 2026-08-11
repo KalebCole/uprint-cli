@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "queue cancel requires a job ID or --all",
+    "suggestion": "Use 'uprint queue cancel <job-id>' or 'uprint queue cancel --all'"
+  }
+}

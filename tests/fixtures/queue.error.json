@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "QUEUE_ERROR",
+    "message": "Fixture queue failure",
+    "suggestion": "Run 'uprint status' to check printer"
+  }
+}

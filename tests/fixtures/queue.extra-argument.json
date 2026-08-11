@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "command": "queue",
+  "timestamp": "<timestamp>",
+  "success": false,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "Unexpected queue cancellation argument: extra",
+    "suggestion": "Use one job ID or --all"
+  }
+}

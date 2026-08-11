@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "command": "setup",
+  "timestamp": "<timestamp>",
+  "success": true,
+  "data": {
+    "defaultPrinter": "Office UP",
+    "driver": "Universal Print Class Driver",
+    "isUP": true,
+    "config": {
+      "defaultPrinter": "Office UP",
+      "autoWake": true,
+      "timeout": 10000,
+      "jsonOutput": false
+    }
+  }
+}

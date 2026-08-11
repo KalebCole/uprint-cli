@@ -23,9 +23,15 @@ cd uprint-cli
 
 - Windows 10/11 with Print Management (built-in)
 - PowerShell 5.1+ or PowerShell 7+
-- [Pester v5+](https://pester.dev) for running tests
 
-No additional dependencies — uprint uses built-in Windows Print Management cmdlets.
+For tests:
+
+- PowerShell 7
+- [Pester 5.7.1](https://pester.dev)
+- [powershell-yaml](https://github.com/cloudbase/powershell-yaml)
+
+The CLI has no additional runtime dependencies. It uses built-in Windows Print
+Management cmdlets.
 
 ## Commands
 
@@ -39,7 +45,7 @@ No additional dependencies — uprint uses built-in Windows Print Management cmd
 | `uprint queue cancel <id>` | Cancel a specific print job |
 | `uprint queue cancel --all` | Cancel all print jobs |
 | `uprint health` | Run diagnostic health check |
-| `uprint config get [key]` | Show configuration |
+| `uprint config get` | Show all configuration |
 | `uprint config set <key> <value>` | Set configuration value |
 
 ### Global Flags
@@ -161,7 +167,8 @@ uprint-cli/
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/my-feature`)
-3. Run tests: `Invoke-Pester tests/ -Output Detailed`
+3. Run tests:
+   `Import-Module Pester -RequiredVersion 5.7.1; Invoke-Pester tests/ -Output Detailed`
 4. Commit with [conventional commits](https://www.conventionalcommits.org/)
 5. Open a pull request
 
