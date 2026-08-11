@@ -22,9 +22,13 @@
       timers = [],
       reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* The envelope shape is the real one from Format-UPrintOutput.ps1, trimmed
-     to what fits the panel. status is submitted_to_cloud, never "printed". */
+  /* This excerpt shows the fields that matter to the animation. The complete
+     version 1 envelope appears in the agent section below the rig. */
   var ENV = '{"version":1,"command":"print","success":true,\n "data":{"engine":"SumatraPDF",\n  "status":<span class="s">"submitted_to_cloud"</span>}}';
+
+  function commandFor(file) {
+    return '.\\uprint.ps1 print "' + file + '" --json';
+  }
 
   function fileFrom(text) {
     var s = (text || '').trim()
@@ -74,9 +78,9 @@
       rowCmd.classList.add('on');
       rowEnv.classList.add('on');
       rowState.classList.add('on');
-      cmd.textContent = 'uprint print ' + file;
+      cmd.textContent = commandFor(file);
       env.innerHTML = ENV;
-      state.textContent = 'RELEASED AT DEVICE';
+      state.textContent = 'SUBMITTED TO CLOUD';
       state.className = 'st-rel';
       rig.className = 'machine rig printing done';
       rig.dataset.led = 'green';
@@ -87,7 +91,7 @@
 
     at(150, function () {
       rowCmd.classList.add('on');
-      typeInto(cmd, 'uprint print ' + file, 24);
+      typeInto(cmd, commandFor(file), 24);
     });
     at(1300, function () {
       rowEnv.classList.add('on');
@@ -97,15 +101,13 @@
        in the cloud until a badge is presented at the device. */
     at(1950, function () {
       rowState.classList.add('on');
-      state.textContent = 'HELD IN CLOUD';
+      state.textContent = 'SUBMITTED TO CLOUD';
       state.className = 'st-held';
       rig.dataset.led = 'amber';
     });
     at(2900, function () { rig.classList.add('badged'); });
     at(3450, function () {
       rig.dataset.led = 'green';
-      state.textContent = 'RELEASED AT DEVICE';
-      state.className = 'st-rel';
     });
     at(3700, function () { rig.classList.add('working', 'feeding'); });
     at(4400, function () { rig.classList.add('printing'); });

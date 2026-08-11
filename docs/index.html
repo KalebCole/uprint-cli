@@ -1,68 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <!--
-  ============================================================================
-  DESIGN CONTRACT — uprint-cli landing page
-  Seed key 7bf34255 · assigned index 6 · mode: persuade
-  ============================================================================
-
-  THESIS
-    A printer is a machine with a documented paper path. This page is the
-    service manual for that machine, and the machine on it actually runs.
-
-  OWN-WORLD
-    Service-manual exploded-parts diagram. Light ground (#F2EFE6) because
-    the scene is a printed manual read under office fluorescents, not a
-    terminal at midnight — which also escapes the dark-CLI AI default.
-    Archivo / Archivo Narrow for the plate lettering, JetBrains Mono for
-    machine output only. Figure numbers, callout rules, and section marks
-    carry the identity instead of icon cards.
-
-  STORY
-    A Microsoft employee who cannot print from their dev box asks an agent
-    in plain language, and the sheet comes out of a machine across the room.
-
-  FIRST VIEWPORT
-    What it is, the install line that actually works, and FIG. 1 — a live
-    demo where the visitor types their own prompt, presses SEND, and watches
-    a sheet feed in, travel the paper path, and slide out with their own
-    filename printed on it.
-
-  FORM
-    Static HTML + one stylesheet + one script. No framework, no build step,
-    no runtime dependency, relative paths only. Portable to any static host.
-
-  SIGNATURE INTERACTION
-    The prompt-to-paper rig. Nothing inside the machine moves until the
-    badge taps the reader, because that is literally how Universal Print
-    behaves — the job is held in the cloud until release.
-
-  HONESTY CONSTRAINTS
-    - Every command, flag, exit code and envelope field is verified against
-          src/ and dist/ on master. No invented surface.
-    - No fabricated metrics. The previous version of this page published
-      "95% time reduction" and "41s avg print-to-paper"; both were invented
-      and are deliberately absent here.
-    - The envelope never says "printed". On a Universal Print target it says
-      "submitted_to_cloud"; on anything else, "submitted". Both are on the
-      page because an agent has to branch on both. See Invoke-UPrintPrint.ps1
-      line 59.
-    - Unshipped commands are marked data-release="pending" and are visually
-      flagged as not yet available. See RELEASE STRINGS below.
-    - No deep issue links. Issue numbers differ between the private work repo
-      and the public mirror this page is served from, so a link to /issues/34
-      would 404 for every visitor. Limitations are stated in prose and the
-      tracker is linked at the top level only. All four outbound links were
-      checked for HTTP 200 against the public repo.
-  ============================================================================
+  Service-manual landing page. Keep product claims aligned with
+  spec/uprint-cli-contract.yaml and tests/fixtures/*.json.
 -->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>uprint: Universal Print CLI for humans and AI agents</title>
-<meta name="description" content="A Universal Print CLI for Windows. Print from the terminal, silently, to the right printer, and let an AI agent do it for you. Every command speaks a versioned JSON envelope.">
+<meta name="description" content="A PowerShell CLI for the local Windows printing system. Submit files, inspect printers and queues, and give AI agents versioned JSON output.">
 <meta property="og:title" content="uprint: Universal Print CLI for humans and AI agents">
-<meta property="og:description" content="Print from the terminal, silently, to the right printer. Every command speaks a versioned JSON envelope, so an agent can drive it.">
+<meta property="og:description" content="Submit files through the local Windows printing system. Versioned JSON output lets an AI agent drive the CLI.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,100 +21,11 @@
 
 <a class="skip" href="#main">Skip to content</a>
 
-<!--
-  ===== RELEASE STRINGS =============================================
-  When issue #22 (TypeScript port / npm package) lands, update the
-  node marked data-release-key="npm" and flip its data-release
-  attribute from "pending" to "shipped".
-
-  When issue #23 (uprint skill install) lands, do the same for the
-  node marked data-release-key="skill".
-
-  Those two are one-line flips. Issue #29 is NOT — read on.
-
-  ISSUE #29 (make JSON the default output) HAS LANDED, and it was a content
-  change rather than a string flip. This page used to frame the tool as
-  human-readable by default with --json as the opt-in for agents. That
-  framing is now inverted: JSON is the default and --human is the opt-out.
-  All three of the things this note used to list as going stale have been
-  updated:
-
-    - the global flags list now leads with --human and records --json as
-      accepted-but-a-no-op
-    - the jsonOutput config row now documents unset as meaning JSON, and
-      false as the permanent human opt-out. It used to add that config get
-      still reported false for an unset key (PowerShell parity, pinned by
-      a test). #100 removed that: CONFIG_DEFAULTS.jsonOutput is now derived
-      from DEFAULT_MODE, so an unset key reports true, and the row was
-      corrected here under #101.
-
-      Worth keeping, because it is the same failure as the exit-code list
-      below. The literal false was written when human WAS the default, so
-      the parity claim was true; #29 flipped the default and the literal
-      survived, preserving the VALUE and destroying the CLAIM. Parity with
-      a value is not parity with a claim, and only the value is greppable.
-    - the STDOUT label on the FIG. 1 rig and the sample commands no longer
-      pass --json, which had become redundant rather than wrong
-
-  The warning that outlived the issue, and is the reason this paragraph is
-  kept rather than deleted: check the flag's real behaviour before editing,
-  not the issue title. An issue being open is not evidence about what the
-  code does, and neither is an issue being closed.
-
-  ISSUE #35 (TypeScript port) INVERTED THE EXIT-CODE COPY, and this page
-  shipped the falsification it had already written down. Before the port
-  there was no exit statement anywhere in src/, so a handled error emitted
-  success:false and the process still exited 0; only an unknown command
-  exited 1. The page said exactly that, in the "Success is the signal"
-  contract item and the exit-code list.
-
-  The port replaced that. src/lib/render.ts, now on master:
-
-      export function exitCodeFor(result: CommandResult): ExitCode {
-        if (result.exitCode !== undefined) return result.exitCode;
-        return result.error ? EXIT_ERROR : EXIT_SUCCESS;
-      }
-
-  No mode parameter, so any errored result exits 1, and 3 is reached only
-  where a command opts into it explicitly at argument, option or config
-  validation (cli.ts:467 is the split: unknown command takes EXIT_ERROR,
-  malformed option takes EXIT_INVALID_INPUT). Corrected under #101 against
-  a probe of bin/uprint.js in this tree, on an isolated USERPROFILE.
-
-  Note the direction, and note what it cost. That copy was accurate when
-  written and the merge queue broke it. The paragraph above predicted the
-  break and named the PR that would cause it, and the page still served the
-  false claim for the whole interval, because a prediction in prose and a
-  correction in markup are not connected by anything. The data-release
-  markers cannot express it either; they only flag what is already false.
-  A claim can be true, unmarked, and doomed at the same time, and writing
-  that sentence down does not schedule the edit it implies.
-
-  A SECOND ERROR IN THE SAME LIST, older than #35 and independent of it:
-  "3, invalid input, such as a missing file argument" named the wrong code.
-  A missing FILE exits 1 (FILE_NOT_FOUND, measured on a configured profile);
-  it is a missing ARGUMENT that exits 3. The example straddled the exact
-  boundary it was meant to illustrate, so it read as correct from either
-  side, and it survived every review that only checked the #35 direction.
-
-  It also survived the probe in #101's own report, which ran unconfigured:
-  the first-run guard returns NOT_CONFIGURED before any command-level check,
-  so the row labelled "print <missing file>" measured the guard, not the
-  missing file. Right exit code, wrong cause, and the label was the only
-  record of which one was intended. When a probe row is named for its
-  intent, verify the error code too, not just the exit status.
-
-  The durable form for this list: these rows are derivable from a probe, so
-  re-derive them when the binary changes rather than annotating them with a
-  prediction.
-  ===================================================================
--->
-
 <header class="masthead">
   <div class="shell">
     <div class="plate">
       <span class="mark">uprint</span>
-<span class="rev">REV. 2 &middot; TYPESCRIPT</span>
+        <span class="rev">REV. 1 &middot; POWERSHELL</span>
     </div>
     <nav aria-label="Sections">
       <a href="#why">Why</a>
@@ -187,9 +46,9 @@
     <div class="hero-copy">
       <h1>Print from the terminal.<br>Or just ask your agent to.</h1>
       <p class="lede">
-        <strong>uprint</strong> is a Universal Print CLI for Windows. It prints silently,
-        to the printer you actually meant, and every command can speak a versioned
-        JSON envelope, so a human can run it and an AI agent can drive it.
+        <strong>uprint</strong> is a PowerShell CLI for the local Windows printing
+        system. It submits files to the printer you select, and every command can
+        return a versioned JSON envelope for an AI agent.
       </p>
 
       <div class="install-block">
@@ -197,13 +56,12 @@
         <div class="cmdline">
           <pre id="installCmd">git clone https://github.com/kalebcole/uprint-cli.git
 cd uprint-cli
-npm ci && npm run build
-node bin/uprint.js setup</pre>
+.\uprint.ps1 setup</pre>
           <button class="copy" data-copy="#installCmd" aria-label="Copy install commands">COPY</button>
         </div>
         <p class="fineprint">
-              Windows, Node.js 20 or newer. No package-manager step yet.
-          <span data-release="pending" data-release-key="npm">An <code>npm install -g</code> route arrives with the TypeScript port.</span>
+          Windows 10 or 11 with PowerShell 5.1 or PowerShell 7 and no
+          additional runtime dependencies.
         </p>
       </div>
 
@@ -211,12 +69,12 @@ node bin/uprint.js setup</pre>
         <div class="ba-col ba-before">
           <span class="ba-tag">BEFORE</span>
           <code>Open PDF → Print → right printer</code>
-          <p>You pick the right printer and confirm. No error appears. No page comes out. Nothing tells you where the job stopped.</p>
+          <p>You pick the right printer and confirm, but no error or page appears and you cannot see where the job stopped.</p>
         </div>
         <div class="ba-col ba-after">
           <span class="ba-tag">AFTER</span>
-          <code>uprint print report.pdf</code>
-          <p>Nothing opens. The printer you named gets it. You get back where it went, which engine sent it, and whether it is waiting on your badge.</p>
+          <code>.\uprint.ps1 print report.pdf</code>
+          <p>The CLI selects an available engine and submits to the printer you named. It reports the engine and whether Universal Print accepted the job.</p>
         </div>
       </div>
     </div>
@@ -225,11 +83,11 @@ node bin/uprint.js setup</pre>
     <figure class="rig-figure">
       <figcaption class="fig-head">
         <span class="fig-no">FIG. 1</span>
-        <span class="fig-title">Prompt to paper</span>
+        <span class="fig-title">Prompt to submission</span>
       </figcaption>
 
       <div class="prompt-bay">
-        <label class="field-label" for="prompt">SAY WHAT YOU WANT PRINTED</label>
+        <label class="field-label" for="prompt">SAY WHAT YOU WANT TO SUBMIT</label>
         <div class="inrow">
           <span class="pfx">you →</span>
           <input id="prompt" value="print the Q3 handover doc" aria-label="Prompt to the agent" maxlength="70">
@@ -238,8 +96,8 @@ node bin/uprint.js setup</pre>
 
         <div class="pipe" aria-live="polite">
           <div class="row" id="rowCmd"><span class="n">AGENT · TOOL CALL</span><code id="cmd"></code></div>
-      <div class="row" id="rowEnv"><span class="n">STDOUT &middot; default</span><code id="env"></code></div>
-          <div class="row" id="rowState"><span class="n">JOB STATE</span><code id="state">—</code></div>
+          <div class="row" id="rowEnv"><span class="n">JSON ENVELOPE &middot; EXCERPT</span><code id="env"></code></div>
+          <div class="row" id="rowState"><span class="n">CLI OBSERVATION</span><code id="state">—</code></div>
         </div>
       </div>
 
@@ -262,17 +120,17 @@ node bin/uprint.js setup</pre>
           <div class="meta">OFFICE-PRINTER-1 · SUMATRAPDF</div>
           <div class="l a"></div><div class="l b"></div><div class="l c"></div><div class="l a"></div>
           <div class="l d"></div><div class="l b"></div><div class="l a"></div><div class="l c"></div><div class="l d"></div>
-          <div class="stamp">RELEASED · 1 COPY</div>
+          <div class="stamp">DOWNSTREAM · 1 COPY</div>
         </div>
         <div class="tray"></div>
         <div class="mach-foot">OFFICE-PRINTER-1 · UNIVERSAL PRINT</div>
       </div>
 
       <p class="fig-note">
-        Universal Print holds the job in the cloud until someone badges at the device.
-        That is why the envelope reports <code>submitted_to_cloud</code> here, plain
-        <code>submitted</code> on a non-Universal-Print target, and <code>printed</code>
-        never: the tool only claims what it can actually observe.
+        The CLI stops observing the job after Universal Print accepts it. The
+        envelope therefore reports <code>submitted_to_cloud</code>, or
+        <code>submitted</code> for another printer. The badge and paper path are
+        a downstream illustration, not a status reported by U-Print.
       </p>
     </figure>
 
@@ -298,30 +156,30 @@ node bin/uprint.js setup</pre>
           actually <em>send a job to it</em> from the command line? Didn't exist.
         </p>
         <p>
-          I opened the PDF, clicked Print, selected the right printer, and confirmed. No error appeared,
-          but the document never printed. I couldn't even tell if my job was submitted, let alone whether
-          it was waiting for my badge tap at the printer.
+          I opened the PDF, clicked Print, selected the right printer, and
+          confirmed, but no error or document appeared. I couldn't tell if my
+          job was submitted or waiting for my badge tap at the printer.
         </p>
         <p>
-          So I built uprint. A CLI that prints silently, targets the right printer, and speaks JSON
-          so AI agents can use it too.
+          So I built uprint. A CLI that targets the right printer, reports the
+          submission result, and provides JSON for AI agents.
         </p>
       </div>
 
       <aside class="why-aside">
         <h3>What that actually fixed</h3>
         <dl class="fixes">
-          <dt>Silent</dt>
-          <dd>SumatraPDF runs hidden and exits. No window, no popup, no process left behind.</dd>
+          <dt>Engine-aware</dt>
+          <dd>U-Print selects the first available engine in this order: SumatraPDF, Acrobat, then Windows <code>PrintTo</code>.</dd>
 
           <dt>Targeted</dt>
           <dd>The printer name is passed explicitly to the engine, not inherited from whatever Windows had selected.</dd>
 
           <dt>Legible</dt>
-          <dd>Every command reports where the job went, which engine sent it, and whether it is waiting on a badge.</dd>
+          <dd>The print result names the printer, engine, and observable submission state.</dd>
 
-          <dt>Fail closed</dt>
-          <dd>If the reliable engine is missing, uprint says so and names the install command. It never turns an unobservable handoff into success.</dd>
+          <dt>Bounded claim</dt>
+          <dd>A successful command means submission completed without an observed error. It does not mean that paper came out.</dd>
         </dl>
       </aside>
     </div>
@@ -337,24 +195,26 @@ node bin/uprint.js setup</pre>
     </div>
 
     <p class="sec-lede">
-      Most CLIs make an agent scrape human text and guess. uprint hands it a contract instead:
-      one envelope shape, every command, every time, success or failure.
+      Most CLIs make an agent scrape human text and guess. In JSON mode, uprint
+      returns one versioned envelope on standard output for success or failure.
     </p>
 
     <div class="envelope-grid">
       <div class="env-col">
-        <span class="tag">SUCCESS · uprint status</span>
-        <pre class="code"><span class="p">{</span>
+        <span class="tag">SUCCESS · .\uprint.ps1 status --json</span>
+        <pre id="statusSuccess" class="code"><span class="p">{</span>
   <span class="k">"version"</span>: <span class="num">1</span>,
   <span class="k">"command"</span>: <span class="str">"status"</span>,
   <span class="k">"timestamp"</span>: <span class="str">"2026-01-15T09:30:00.0000000-08:00"</span>,
   <span class="k">"success"</span>: <span class="num">true</span>,
   <span class="k">"data"</span>: <span class="p">{</span>
-    <span class="k">"name"</span>: <span class="str">"Office-Printer-1"</span>,
+    <span class="k">"name"</span>: <span class="str">"Office UP"</span>,
     <span class="k">"status"</span>: <span class="str">"Normal"</span>,
     <span class="k">"driver"</span>: <span class="str">"Universal Print Class Driver"</span>,
-    <span class="k">"port"</span>: <span class="str">"UPPORT:"</span>,
-    <span class="k">"pendingJobs"</span>: <span class="num">0</span>,
+    <span class="k">"port"</span>: <span class="str">"PORT-UP"</span>,
+    <span class="k">"type"</span>: <span class="str">"Local"</span>,
+    <span class="k">"shared"</span>: <span class="num">false</span>,
+    <span class="k">"pendingJobs"</span>: <span class="num">1</span>,
     <span class="k">"isUP"</span>: <span class="num">true</span>
   <span class="p">}</span>
 <span class="p">}</span></pre>
@@ -362,7 +222,7 @@ node bin/uprint.js setup</pre>
 
       <div class="env-col">
         <span class="tag">FAILURE · <code>error</code> replaces <code>data</code></span>
-        <pre class="code"><span class="p">{</span>
+        <pre id="statusFailure" class="code"><span class="p">{</span>
   <span class="k">"version"</span>: <span class="num">1</span>,
   <span class="k">"command"</span>: <span class="str">"status"</span>,
   <span class="k">"timestamp"</span>: <span class="str">"2026-01-15T09:31:12.0000000-08:00"</span>,
@@ -383,26 +243,25 @@ node bin/uprint.js setup</pre>
       </div>
       <div class="contract-item">
         <h4>Errors suggest</h4>
-        <p>Every error carries a <code>suggestion</code> naming the next command to run, so an agent can recover instead of stalling.</p>
+        <p>Every error carries a <code>suggestion</code> field. It names a recovery action when one is available.</p>
       </div>
       <div class="contract-item">
         <h4>Warnings ride along</h4>
         <p>An optional <code>warnings</code> array sits beside a success, so a job can succeed <em>and</em> report that it is waiting on a badge.</p>
       </div>
       <div class="contract-item">
-        <h4>Success is the signal</h4>
-        <p>Branch on <code>success</code>, not the exit code. The exit code tells you <em>that</em> a call failed; only the envelope tells you <em>why</em>, in an <code>error.code</code> you can switch on. A failed print and an unknown command both exit <code>1</code>.</p>
+        <h4>Use both signals</h4>
+        <p>The exit code separates success, operational errors, and invalid input. In JSON mode, inspect <code>success</code> and <code>error.code</code> for the specific result.</p>
       </div>
     </div>
 
-    <div class="skill-callout" data-release="pending" data-release-key="skill">
-      <span class="pending-flag">NOT SHIPPED YET</span>
-      <h3><code>uprint skill install</code></h3>
+    <div class="skill-callout">
+      <h3>Use U-Print with an agent</h3>
       <p>
-        One command to register uprint as a tool your coding agent already knows how to call.
-        No prompt engineering, no wrapper script. It is on the roadmap and does not exist yet.
-        Until it lands, point your agent at <a href="https://github.com/kalebcole/uprint-cli/blob/master/SKILL.md"><code>SKILL.md</code></a>
-        in the repo, which documents the same surface by hand.
+        Copy the repository's
+        <a href="https://github.com/kalebcole/uprint-cli/blob/master/SKILL.md"><code>SKILL.md</code></a>
+        into your agent's skill directory. It tells the agent to request JSON
+        output and documents the supported command surface.
       </p>
     </div>
   </div>
@@ -415,7 +274,7 @@ node bin/uprint.js setup</pre>
       <span class="fig-no">§ 3</span>
       <h2>Command reference</h2>
     </div>
-    <p class="sec-lede">Everything the CLI accepts today. Nothing here is aspirational.</p>
+    <p class="sec-lede">This reference contains only the commands and options that the CLI accepts today.</p>
 
     <div class="table-scroll">
       <table class="ref">
@@ -425,56 +284,53 @@ node bin/uprint.js setup</pre>
         </thead>
         <tbody>
           <tr>
-            <th scope="row"><code>uprint setup</code></th>
-            <td>Interactive printer discovery. Lists what is available and saves your default. Run this first.</td>
-            <td class="flags"><span class="none">none</span></td>
+            <th scope="row"><code>.\uprint.ps1 setup</code></th>
+            <td>Interactive printer discovery in human mode. For noninteractive JSON setup, run <code>.\uprint.ps1 setup --printer &lt;name&gt; --json</code>.</td>
+            <td class="flags"><code>--printer &lt;name&gt;</code> <code>--json</code></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint printers</code></th>
+            <th scope="row"><code>.\uprint.ps1 printers</code></th>
             <td>List available printers.</td>
             <td class="flags"><code>--universal-only</code> <code>-u</code></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint status</code></th>
+            <th scope="row"><code>.\uprint.ps1 status</code></th>
             <td>Printer state, driver, port, pending job count, and whether it is a Universal Print device.</td>
             <td class="flags"><span class="none">none</span></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint print &lt;file&gt;</code></th>
+            <th scope="row"><code>.\uprint.ps1 print &lt;file&gt;</code></th>
             <td>Print a file. Resolves the path, selects a print engine, and reports which one it used.</td>
             <td class="flags"><code>--copies N</code> <code>--duplex</code> <code>--color</code> <code>--mono</code></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint queue</code></th>
+            <th scope="row"><code>.\uprint.ps1 queue</code></th>
             <td>List jobs currently in the print queue.</td>
             <td class="flags"><span class="none">none</span></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint queue cancel &lt;id&gt;</code></th>
+            <th scope="row"><code>.\uprint.ps1 queue cancel &lt;id&gt;</code></th>
             <td>Cancel a single job by its numeric id.</td>
             <td class="flags"><span class="none">none</span></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint queue cancel --all</code></th>
+            <th scope="row"><code>.\uprint.ps1 queue cancel --all</code></th>
             <td>Cancel every job on the target printer.</td>
             <td class="flags"><code>--all</code></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint health</code></th>
+            <th scope="row"><code>.\uprint.ps1 health</code></th>
             <td>Composite diagnostic across spooler, printer state, queue backlog, and the Universal Print driver.</td>
             <td class="flags"><span class="none">none</span></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint config set &lt;key&gt; &lt;value&gt;</code></th>
+            <th scope="row"><code>.\uprint.ps1 config set &lt;key&gt; &lt;value&gt;</code></th>
             <td>Write a config value. Booleans and integers are coerced from strings.</td>
             <td class="flags"><span class="none">none</span></td>
           </tr>
           <tr>
-            <th scope="row"><code>uprint config get</code></th>
-            <td>
-              Print the whole configuration.
-              <span class="caveat">A key argument is accepted but currently ignored. It always returns the full config. Known bug.</span>
-            </td>
+            <th scope="row"><code>.\uprint.ps1 config get</code></th>
+            <td>Print the whole configuration. This command does not accept a key argument.</td>
             <td class="flags"><span class="none">none</span></td>
           </tr>
         </tbody>
@@ -485,7 +341,7 @@ node bin/uprint.js setup</pre>
       <div class="glob-col">
         <h4>Global flags</h4>
         <dl class="kv">
-        <dt><code>--human</code></dt><dd>Opt out of JSON and print readable tables. <code>--json</code> is accepted but now a no-op.</dd>
+          <dt><code>--json</code></dt><dd>Emit one JSON envelope on standard output. Without it, commands use human-readable output.</dd>
           <dt><code>--printer &lt;name&gt;</code></dt><dd>Override the configured default for one invocation.</dd>
           <dt><code>--help</code></dt><dd>Usage summary.</dd>
         </dl>
@@ -494,18 +350,18 @@ node bin/uprint.js setup</pre>
         <h4>Exit codes</h4>
         <dl class="kv">
           <dt><code>0</code></dt><dd>The command succeeded.</dd>
-          <dt><code>1</code></dt><dd>Any errored result: a failed operation such as <code>FILE_NOT_FOUND</code> or <code>NOT_CONFIGURED</code>, and an unknown <em>command</em>, alike.</dd>
-          <dt><code>3</code></dt><dd>Invalid input, rejected before the command runs: an unknown <em>option</em>, a missing required argument, or an unparseable value such as <code>--copies foo</code>.</dd>
+          <dt><code>1</code></dt><dd>Operational error, such as a missing printer or a failed submission.</dd>
+          <dt><code>3</code></dt><dd>Invalid input, including an unknown command, an unknown option, a missing argument, or a file that does not exist.</dd>
         </dl>
       </div>
       <div class="glob-col">
         <h4>Configuration</h4>
         <p class="kv-note">Stored at <code>%USERPROFILE%\.uprint\config.json</code></p>
         <dl class="kv">
-          <dt><code>defaultPrinter</code></dt><dd>Target used when <code>--printer</code> is absent.</dd>
-        <dt><code>jsonOutput</code></dt><dd>Leave it unset and you get JSON, the default mode. Set it to <code>false</code> to make every command behave as if <code>--human</code> were passed. <code>config get</code> reports <code>true</code> for an unset key, matching the mode you actually get.</dd>
+          <dt><code>defaultPrinter</code></dt><dd>Target used when <code>--printer</code> is absent. Default <code>null</code>.</dd>
+          <dt><code>jsonOutput</code></dt><dd>Use JSON output for every command. Default <code>false</code>.</dd>
           <dt><code>autoWake</code></dt><dd>Default <code>true</code>.</dd>
-          <dt><code>timeoutMs</code></dt><dd>Print-engine timeout in milliseconds. Default <code>30000</code>.</dd>
+          <dt><code>timeout</code></dt><dd>Nonnegative print-engine timeout in milliseconds. Default <code>10000</code>.</dd>
         </dl>
       </div>
     </div>
@@ -528,11 +384,10 @@ node bin/uprint.js setup</pre>
           <div class="cmdline sm">
             <pre id="step1">git clone https://github.com/kalebcole/uprint-cli.git
 cd uprint-cli
-npm ci && npm run build
-node bin/uprint.js setup</pre>
+.\uprint.ps1 setup</pre>
             <button class="copy" data-copy="#step1" aria-label="Copy setup commands">COPY</button>
           </div>
-          <p><code>setup</code> lists the printers it can see and saves the one you choose. Until you run it, every other command stops and tells you to.</p>
+          <p><code>setup</code> lists installed printers and saves the one you choose. You can also select a printer for one command with <code>--printer</code>.</p>
         </div>
       </li>
       <li>
@@ -540,7 +395,7 @@ node bin/uprint.js setup</pre>
         <div class="step-body">
           <h4>Print something</h4>
           <div class="cmdline sm">
-<pre id="step2">node bin/uprint.js print report.pdf --human</pre>
+<pre id="step2">.\uprint.ps1 print report.pdf</pre>
             <button class="copy" data-copy="#step2" aria-label="Copy print command">COPY</button>
           </div>
           <p>If the target is a Universal Print device, the job waits in the cloud until you badge at the printer. The output says so.</p>
@@ -551,10 +406,10 @@ node bin/uprint.js setup</pre>
         <div class="step-body">
           <h4>Hand it to an agent</h4>
           <div class="cmdline sm">
-<pre id="step3">node bin/uprint.js print report.pdf</pre>
+<pre id="step3">.\uprint.ps1 print report.pdf --json</pre>
             <button class="copy" data-copy="#step3" aria-label="Copy JSON command">COPY</button>
           </div>
-          <p>Point your agent at <code>skills/uprint/SKILL.md</code> in the repo for the documented surface, and let it branch on <code>success</code>.</p>
+          <p>Point your agent at the root <code>SKILL.md</code> file and let it inspect the process exit code, <code>success</code>, and <code>error.code</code>.</p>
         </div>
       </li>
     </ol>
@@ -562,9 +417,10 @@ node bin/uprint.js setup</pre>
     <div class="reqs">
       <h4>Requirements</h4>
       <ul>
-        <li>Windows 10 or 11 with Node.js 20 or newer</li>
+        <li>Windows 10 or 11 with PowerShell 5.1 or PowerShell 7</li>
         <li>A printer the machine can already see, Universal Print or otherwise</li>
-        <li>SumatraPDF in <code>tools\</code> for reliable silent printing. Install it with <code>npm run tools:sumatra</code>.</li>
+        <li>Windows PrintManagement cmdlets and the Spooler service</li>
+        <li>No additional runtime dependencies</li>
       </ul>
     </div>
   </div>
@@ -584,9 +440,8 @@ node bin/uprint.js setup</pre>
     <ul class="limit-list">
       <li>
         <strong>Submitted is not printed.</strong>
-        A non-zero exit from the print engine is surfaced as a failure envelope, but a clean exit
-        only means the job reached the spooler or the cloud queue. It is still not proof that paper
-        came out.
+        A successful engine handoff means that U-Print observed no submission
+        error. It is not proof that paper came out.
       </li>
       <li>
         <strong>Windows only.</strong>
