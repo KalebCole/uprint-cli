@@ -1,186 +1,221 @@
-# uprint-cli
+# U-Print
 
-Universal Print CLI for humans and AI agents. List printers, check status, print files, manage the print queue, and run health diagnostics — all from the command line. Designed for both human operators and AI agents (Copilot CLI, Claude, etc.) with structured JSON output.
+U-Print is a PowerShell CLI for printers installed in Windows. It can list
+printers, inspect status, submit files, manage print jobs, and run health
+checks. Human-readable output is the default. Versioned JSON output supports
+AI agents and automation.
 
-## Quick Start
-
-```powershell
-# Clone the repo
-git clone <repo-url>
-cd uprint-cli
-
-# Run interactive setup to discover and select your default printer
-.\uprint.ps1 setup
-
-# Print a file
-.\uprint.ps1 print report.pdf
-
-# Check printer status (JSON output for agents)
-.\uprint.ps1 status --json
-```
+U-Print supports Microsoft Universal Print printers and other installed
+Windows printers. It does not search a cloud or building printer directory.
 
 ## Requirements
 
-- Windows 10/11 with Print Management (built-in)
-- PowerShell 5.1+ or PowerShell 7+
+- Windows 10 or 11
+- Windows PrintManagement cmdlets
+- The Windows Spooler service
+- Windows PowerShell 5.1 or PowerShell 7
 
-For tests:
+The CLI has no additional runtime dependency.
 
-- PowerShell 7
-- [Pester 5.7.1](https://pester.dev)
-- [powershell-yaml](https://github.com/cloudbase/powershell-yaml)
+## Quick start
 
-The CLI has no additional runtime dependencies. It uses built-in Windows Print
-Management cmdlets.
+```powershell
+git clone https://github.com/KalebCole/uprint-cli.git
+cd uprint-cli
+
+# Select and save a default printer.
+.\uprint.ps1 setup
+
+# Inspect the default printer.
+.\uprint.ps1 status
+
+# Submit a file.
+.\uprint.ps1 print ".\report.pdf"
+```
+
+`setup` is interactive in human mode. It lists printers installed in Windows
+and saves the selected printer in `%USERPROFILE%\.uprint\config.json`.
+
+## Select a printer
+
+Commands use printers in this order:
+
+1. The printer supplied with `--printer <name>`.
+2. The configured `defaultPrinter`.
+
+List installed printers before you use another office or building:
+
+```powershell
+.\uprint.ps1 printers --json
+.\uprint.ps1 status --printer "Office-Printer-2" --json
+.\uprint.ps1 print ".\report.pdf" --printer "Office-Printer-2" --json
+```
+
+If the required printer is not listed, install it in Windows first or contact
+your IT team.
+
+Agents must use noninteractive JSON setup:
+
+```powershell
+.\uprint.ps1 setup --printer "Office-Printer-2" --json
+```
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `uprint setup` | Interactive printer discovery and default selection |
-| `uprint printers` | List available printers |
-| `uprint status` | Show printer status (online/offline, queue depth) |
-| `uprint print <file>` | Print a file |
-| `uprint queue` | List pending print jobs |
-| `uprint queue cancel <id>` | Cancel a specific print job |
-| `uprint queue cancel --all` | Cancel all print jobs |
-| `uprint health` | Run diagnostic health check |
-| `uprint config get` | Show all configuration |
-| `uprint config set <key> <value>` | Set configuration value |
+| Command | Purpose |
+| --- | --- |
+| `.\uprint.ps1 setup` | Interactively select and save a default printer. |
+| `.\uprint.ps1 setup --printer <name> --json` | Save an explicit printer without a prompt. |
+| `.\uprint.ps1 printers [--universal-only\|-u]` | List installed printers. |
+| `.\uprint.ps1 status` | Inspect one printer and its pending print-job count. |
+| `.\uprint.ps1 print <file>` | Submit one file to a print engine. |
+| `.\uprint.ps1 queue` | List print jobs for one printer. |
+| `.\uprint.ps1 queue cancel <job-id>` | Cancel one print job. |
+| `.\uprint.ps1 queue cancel --all` | Cancel all print jobs for one printer. |
+| `.\uprint.ps1 health` | Check the Spooler, printer, queue, and Universal Print driver. |
+| `.\uprint.ps1 config get` | Return the complete configuration. |
+| `.\uprint.ps1 config set <key> <value>` | Set one supported configuration value. |
 
-### Global Flags
+Cancel by print job ID when possible. Use `queue cancel --all` only when all
+jobs on the selected printer must be cancelled.
 
-| Flag | Description |
-|------|-------------|
-| `--json` | Structured JSON output (agent-friendly) |
-| `--printer <name>` | Target a specific printer |
-| `--help` | Show help text |
+Global options:
 
-### Examples
+| Option | Purpose |
+| --- | --- |
+| `--json` | Emit one version 1 JSON envelope on standard output. |
+| `--printer <name>` | Override the configured printer for one call. |
+| `--help` | Return human help or agent help data. |
 
-```powershell
-# Setup (first run)
-.\uprint.ps1 setup
+Print options:
 
-# List all printers
-.\uprint.ps1 printers --json
-
-# Print with options
-.\uprint.ps1 print slides.pdf --printer Office-Printer-2 --copies 2 --duplex
-
-# View and manage queue
-.\uprint.ps1 queue --json
-.\uprint.ps1 queue cancel --all
-
-# Health diagnostics
-.\uprint.ps1 health --json
-
-# Configuration
-.\uprint.ps1 config set defaultPrinter "Office-Printer-1"
-.\uprint.ps1 config set jsonOutput true
+```text
+--copies <count>    Positive integer. Default: 1.
+--duplex            Request duplex output.
+--color             Request color output. Default.
+--mono              Request monochrome output.
 ```
 
-## JSON Output Format
+`--color` and `--mono` are mutually exclusive.
 
-All commands support `--json` for structured output. The envelope schema:
+Configuration keys are `defaultPrinter`, `autoWake`, `timeout`, and
+`jsonOutput`.
+
+## Submission semantics
+
+U-Print selects the first available print engine in this order:
+
+1. `tools\SumatraPDF-3.5.2-64.exe`
+2. `tools\SumatraPDF.exe`
+3. Adobe Acrobat
+4. Windows `PrintTo`
+
+A successful command means that U-Print observed no submission error. It does
+not confirm that paper came out.
+
+- `submitted_to_cloud`: Universal Print accepted the submission. Badge release
+  at the printer can still be required.
+- `submitted`: Another installed printer accepted the submission.
+
+## JSON for agents
+
+Use agent help as the runtime command contract:
+
+```powershell
+.\uprint.ps1 --help --json
+```
+
+Use `--json` for every agent call. JSON mode writes exactly one envelope to
+standard output.
+
+Success:
 
 ```json
 {
   "version": 1,
   "command": "status",
-  "timestamp": "2025-01-15T09:30:00.0000000-08:00",
+  "timestamp": "2026-01-15T09:30:00.0000000-08:00",
   "success": true,
-  "data": { ... }
-}
-```
-
-On error:
-
-```json
-{
-  "version": 1,
-  "command": "print",
-  "timestamp": "2025-01-15T09:30:00.0000000-08:00",
-  "success": false,
-  "error": {
-    "code": "FILE_NOT_FOUND",
-    "message": "File to print was not found"
+  "data": {
+    "name": "Office UP",
+    "status": "Normal",
+    "driver": "Universal Print Class Driver",
+    "port": "PORT-UP",
+    "type": "Local",
+    "shared": false,
+    "pendingJobs": 1,
+    "isUP": true
   }
 }
 ```
 
-Optional `warnings` array is included when applicable.
+Failure:
 
-## Agent Integration
+```json
+{
+  "version": 1,
+  "command": "status",
+  "timestamp": "2026-01-15T09:31:12.0000000-08:00",
+  "success": false,
+  "error": {
+    "code": "PRINTER_NOT_FOUND",
+    "message": "Specified printer was not found",
+    "suggestion": "Run 'uprint printers' to list available printers"
+  }
+}
+```
 
-### Copilot CLI
+An optional `warnings` array can accompany a successful result.
+
+Process exit codes:
+
+| Code | Meaning |
+| --- | --- |
+| `0` | Success |
+| `1` | Operational error |
+| `3` | Invalid input, including a missing file |
+
+## Install the Copilot CLI skill
+
+From the repository root:
 
 ```powershell
 $uprintPath = (Resolve-Path ".\uprint.ps1").Path
 [Environment]::SetEnvironmentVariable('UPRINT_CLI_PATH', $uprintPath, 'User')
 $env:UPRINT_CLI_PATH = $uprintPath
+
 $skillDirectory = Join-Path $env:USERPROFILE '.copilot\skills\uprint-cli'
 New-Item -ItemType Directory -Path $skillDirectory -Force | Out-Null
 Copy-Item ".\SKILL.md" (Join-Path $skillDirectory 'SKILL.md')
 ```
 
-Restart the process that launches Copilot CLI after setting the user
-environment variable. In an existing session, run `/skills reload`, then
-`/skills info uprint-cli` to verify the skill. Copilot CLI automatically
-invokes U-Print for printing, printer selection, queue work, and print
-diagnostics.
+Restart the process that launches Copilot CLI so it receives
+`UPRINT_CLI_PATH`. In an existing Copilot CLI session, reload and inspect the
+skill:
 
-### Other AI Agents
-
-Add to your agent instructions:
-
-```
-For printing tasks, use the U-Print CLI at UPRINT_CLI_PATH.
-Always pass --json. Use --help --json for the runtime command contract.
-See SKILL.md for printer selection, mutation safety, and submission rules.
+```text
+/skills reload
+/skills info uprint-cli
 ```
 
-## Architecture
+The skill resolves the CLI, discovers installed printers, applies mutation
+safeguards, and checks submission results.
 
-```
-uprint-cli/
-├── uprint.ps1                  # Entry point / dispatcher
-├── src/
-│   ├── commands/               # One script per command
-│   │   ├── Get-UPrintPrinters.ps1
-│   │   ├── Get-UPrintStatus.ps1
-│   │   ├── Invoke-UPrintPrint.ps1
-│   │   ├── Get-UPrintQueue.ps1
-│   │   ├── Get-UPrintHealth.ps1
-│   │   └── Invoke-UPrintSetup.ps1
-│   └── lib/                    # Shared helpers
-│       ├── Format-UPrintOutput.ps1   # JSON envelope formatter
-│       ├── New-UPrintError.ps1       # Structured error builder
-│       └── Get-UPrintConfig.ps1      # Config read/write
-├── tests/                      # Pester unit tests (one per command)
-├── SKILL.md                    # Copilot CLI skill definition
-├── LICENSE                     # MIT License
-└── README.md
+## Contract and development
+
+The normative interface is
+[`spec/uprint-cli-contract.yaml`](spec/uprint-cli-contract.yaml). Normalized
+examples are in [`tests/fixtures/`](tests/fixtures/).
+
+Development tests require PowerShell 7, Pester 5.7.1, and
+[`powershell-yaml`](https://github.com/cloudbase/powershell-yaml):
+
+```powershell
+Import-Module Pester -RequiredVersion 5.7.1
+Invoke-Pester tests/ -Output Detailed
 ```
 
-**Dispatcher pattern:** `uprint.ps1` parses arguments, sources library helpers, and routes to the appropriate command script via a `switch` block. Each command script is self-contained and returns data through `Format-UPrintOutput`, which wraps results in a consistent JSON envelope or human-readable text.
-
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | Operational error |
-| 3 | Invalid input (bad arguments, missing file) |
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/my-feature`)
-3. Run tests:
-   `Import-Module Pester -RequiredVersion 5.7.1; Invoke-Pester tests/ -Output Detailed`
-4. Commit with [conventional commits](https://www.conventionalcommits.org/)
-5. Open a pull request
+Use conventional commits for contributions.
 
 ## License
 
