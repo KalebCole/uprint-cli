@@ -116,18 +116,28 @@ Optional `warnings` array is included when applicable.
 ### Copilot CLI
 
 ```powershell
-Copy-Item ".\SKILL.md" "$env:USERPROFILE\.copilot\skills\uprint-cli.skill.md"
+$uprintPath = (Resolve-Path ".\uprint.ps1").Path
+[Environment]::SetEnvironmentVariable('UPRINT_CLI_PATH', $uprintPath, 'User')
+$env:UPRINT_CLI_PATH = $uprintPath
+$skillDirectory = Join-Path $env:USERPROFILE '.copilot\skills\uprint-cli'
+New-Item -ItemType Directory -Path $skillDirectory -Force | Out-Null
+Copy-Item ".\SKILL.md" (Join-Path $skillDirectory 'SKILL.md')
 ```
 
-Once installed, Copilot CLI will automatically invoke uprint when you mention printing, printers, or print queue in conversation.
+Restart the process that launches Copilot CLI after setting the user
+environment variable. In an existing session, run `/skills reload`, then
+`/skills info uprint-cli` to verify the skill. Copilot CLI automatically
+invokes U-Print for printing, printer selection, queue work, and print
+diagnostics.
 
 ### Other AI Agents
 
 Add to your agent instructions:
 
 ```
-For printing tasks, use the uprint CLI at .\uprint.ps1.
-Always pass --json for structured output. See SKILL.md for full command reference.
+For printing tasks, use the U-Print CLI at UPRINT_CLI_PATH.
+Always pass --json. Use --help --json for the runtime command contract.
+See SKILL.md for printer selection, mutation safety, and submission rules.
 ```
 
 ## Architecture
@@ -160,7 +170,7 @@ uprint-cli/
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | General error |
+| 1 | Operational error |
 | 3 | Invalid input (bad arguments, missing file) |
 
 ## Contributing

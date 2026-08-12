@@ -121,6 +121,18 @@ Describe 'U-Print CLI contract' {
             Should -Be (Get-NormalizedJson -Json $expected)
     }
 
+    It 'explains installed-printer selection in human help' {
+        $result = Invoke-UPrintCliProcess -Arguments @('--help')
+
+        $result.ExitCode | Should -Be 0
+        $result.Stderr | Should -BeNullOrEmpty
+        $result.Stdout | Should -Match 'INSTALLED PRINTERS'
+        $result.Stdout | Should -Match 'configured default'
+        $result.Stdout | Should -Match '--printer <name>'
+        $result.Stdout | Should -Match 'installed in Windows'
+        $result.Stdout | Should -Not -Match 'config get \[key\]'
+    }
+
     It 'returns a JSON invalid-argument result for an unknown command' {
         $expected = Get-Content "$PSScriptRoot/fixtures/arguments.invalid.json" -Raw
 

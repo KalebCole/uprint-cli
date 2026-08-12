@@ -225,6 +225,11 @@ commands:
           - usage
           - commands
           - globalOptions
+          - commandDetails
+          - exitCodes
+          - submissionStates
+          - printerSelection
+          - agentRules
         additionalProperties: false
         properties:
           usage:
@@ -237,6 +242,127 @@ commands:
             type: array
             items:
               type: string
+          commandDetails:
+            type: array
+            items:
+              type: object
+              required:
+                - name
+                - grammar
+                - options
+                - constraints
+                - printerRequired
+                - mutates
+                - explicitUserRequest
+              additionalProperties: false
+              properties:
+                name:
+                  type: string
+                grammar:
+                  type: array
+                  items:
+                    type: string
+                options:
+                  type: array
+                  items:
+                    type: string
+                constraints:
+                  type: array
+                  items:
+                    type: string
+                printerRequired:
+                  type: boolean
+                mutates:
+                  type: boolean
+                explicitUserRequest:
+                  type: boolean
+          exitCodes:
+            type: object
+            required:
+              - "0"
+              - "1"
+              - "3"
+            additionalProperties: false
+            properties:
+              "0":
+                const: success
+              "1":
+                const: operational-error
+              "3":
+                const: invalid-input
+          submissionStates:
+            type: object
+            required:
+              - submitted
+              - submitted_to_cloud
+              - physicalOutputObserved
+            additionalProperties: false
+            properties:
+              submitted:
+                type: string
+              submitted_to_cloud:
+                type: string
+              physicalOutputObserved:
+                type: boolean
+                const: false
+          printerSelection:
+            type: object
+            required:
+              - scope
+              - default
+              - override
+              - discover
+            additionalProperties: false
+            properties:
+              scope:
+                const: installed-printers-only
+              default:
+                const: configuration.defaultPrinter
+              override:
+                const: --printer <name>
+              discover:
+                const: uprint printers --json
+          agentRules:
+            type: object
+            required:
+              - jsonOption
+              - noninteractiveSetup
+              - mutationsRequireExplicitUserRequest
+              - cancelAllRequiresExplicitAllJobsRequest
+              - submissionSuccess
+            additionalProperties: false
+            properties:
+              jsonOption:
+                const: --json
+              noninteractiveSetup:
+                const: uprint setup --printer <name> --json
+              mutationsRequireExplicitUserRequest:
+                type: boolean
+                const: true
+              cancelAllRequiresExplicitAllJobsRequest:
+                type: boolean
+                const: true
+              submissionSuccess:
+                type: object
+                required:
+                  - exitCode
+                  - envelopeSuccess
+                  - statuses
+                additionalProperties: false
+                properties:
+                  exitCode:
+                    type: integer
+                    const: 0
+                  envelopeSuccess:
+                    type: boolean
+                    const: true
+                  statuses:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - submitted
+                        - submitted_to_cloud
     errors: []
     sideEffects: []
 

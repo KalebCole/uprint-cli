@@ -18,6 +18,191 @@
       "--json",
       "--printer <name>",
       "--help"
-    ]
+    ],
+    "commandDetails": [
+      {
+        "name": "setup-human",
+        "grammar": [
+          "uprint setup"
+        ],
+        "options": [],
+        "constraints": [
+          "Interactive human terminal only."
+        ],
+        "printerRequired": false,
+        "mutates": true,
+        "explicitUserRequest": true
+      },
+      {
+        "name": "setup-json",
+        "grammar": [
+          "uprint setup --printer <name> --json"
+        ],
+        "options": [
+          "--printer <name>",
+          "--json"
+        ],
+        "constraints": [
+          "An explicit printer is required.",
+          "This is the noninteractive agent setup flow."
+        ],
+        "printerRequired": true,
+        "mutates": true,
+        "explicitUserRequest": true
+      },
+      {
+        "name": "printers",
+        "grammar": [
+          "uprint printers [--universal-only|-u]"
+        ],
+        "options": [
+          "--universal-only",
+          "-u"
+        ],
+        "constraints": [
+          "Lists printers installed in Windows."
+        ],
+        "printerRequired": false,
+        "mutates": false,
+        "explicitUserRequest": false
+      },
+      {
+        "name": "status",
+        "grammar": [
+          "uprint status"
+        ],
+        "options": [],
+        "constraints": [],
+        "printerRequired": true,
+        "mutates": false,
+        "explicitUserRequest": false
+      },
+      {
+        "name": "print",
+        "grammar": [
+          "uprint print <file> [--copies <count>] [--duplex] [--color|--mono]"
+        ],
+        "options": [
+          "--copies <count>",
+          "--duplex",
+          "--color",
+          "--mono"
+        ],
+        "constraints": [
+          "copies must be a positive integer.",
+          "--color and --mono are mutually exclusive."
+        ],
+        "printerRequired": true,
+        "mutates": true,
+        "explicitUserRequest": true
+      },
+      {
+        "name": "queue-list",
+        "grammar": [
+          "uprint queue"
+        ],
+        "options": [],
+        "constraints": [],
+        "printerRequired": true,
+        "mutates": false,
+        "explicitUserRequest": false
+      },
+      {
+        "name": "queue-cancel-one",
+        "grammar": [
+          "uprint queue cancel <job-id>"
+        ],
+        "options": [],
+        "constraints": [
+          "job-id must be a positive integer."
+        ],
+        "printerRequired": true,
+        "mutates": true,
+        "explicitUserRequest": true
+      },
+      {
+        "name": "queue-cancel-all",
+        "grammar": [
+          "uprint queue cancel --all"
+        ],
+        "options": [
+          "--all"
+        ],
+        "constraints": [
+          "The user must explicitly request cancellation of all jobs."
+        ],
+        "printerRequired": true,
+        "mutates": true,
+        "explicitUserRequest": true
+      },
+      {
+        "name": "health",
+        "grammar": [
+          "uprint health"
+        ],
+        "options": [],
+        "constraints": [],
+        "printerRequired": true,
+        "mutates": false,
+        "explicitUserRequest": false
+      },
+      {
+        "name": "config-get",
+        "grammar": [
+          "uprint config",
+          "uprint config get"
+        ],
+        "options": [],
+        "constraints": [
+          "A key argument is not accepted."
+        ],
+        "printerRequired": false,
+        "mutates": false,
+        "explicitUserRequest": false
+      },
+      {
+        "name": "config-set",
+        "grammar": [
+          "uprint config set <key> <value>"
+        ],
+        "options": [],
+        "constraints": [
+          "key must be defaultPrinter, autoWake, timeout, or jsonOutput."
+        ],
+        "printerRequired": false,
+        "mutates": true,
+        "explicitUserRequest": true
+      }
+    ],
+    "exitCodes": {
+      "0": "success",
+      "1": "operational-error",
+      "3": "invalid-input"
+    },
+    "submissionStates": {
+      "submitted": "Submitted to a non-Universal-Print engine without an observed error.",
+      "submitted_to_cloud": "Submitted to Universal Print and may require badge release.",
+      "physicalOutputObserved": false
+    },
+    "printerSelection": {
+      "scope": "installed-printers-only",
+      "default": "configuration.defaultPrinter",
+      "override": "--printer <name>",
+      "discover": "uprint printers --json"
+    },
+    "agentRules": {
+      "jsonOption": "--json",
+      "noninteractiveSetup": "uprint setup --printer <name> --json",
+      "mutationsRequireExplicitUserRequest": true,
+      "cancelAllRequiresExplicitAllJobsRequest": true,
+      "submissionSuccess": {
+        "exitCode": 0,
+        "envelopeSuccess": true,
+        "statuses": [
+          "submitted",
+          "submitted_to_cloud"
+        ]
+      }
+    }
   }
 }

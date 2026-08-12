@@ -31,4 +31,35 @@ Describe 'U-Print CLI contract document' {
             $json.success | Should -BeOfType [bool]
         }
     }
+
+    It 'defines agent-oriented JSON help' {
+        $helpData = $contract.commands.help.output.data
+        foreach ($field in @(
+            'usage',
+            'commands',
+            'globalOptions',
+            'commandDetails',
+            'exitCodes',
+            'submissionStates',
+            'printerSelection',
+            'agentRules'
+        )) {
+            $helpData.required | Should -Contain $field
+            $helpData.properties[$field] | Should -Not -BeNullOrEmpty
+        }
+
+        $helpData.properties.exitCodes.properties.'1'.const |
+            Should -Be $contract.exitCodes.'1'
+        $helpData.properties.exitCodes.properties.'3'.const |
+            Should -Be $contract.exitCodes.'3'
+        $submissionProperties =
+            $helpData.properties.submissionStates.properties
+        $submissionProperties.physicalOutputObserved.const |
+            Should -Be $contract.printSubmission.physicalOutputObserved
+        $helpData.properties.printerSelection.properties.scope.const |
+            Should -Be 'installed-printers-only'
+        $agentRuleProperties = $helpData.properties.agentRules.properties
+        $agentRuleProperties.mutationsRequireExplicitUserRequest.const |
+            Should -BeTrue
+    }
 }

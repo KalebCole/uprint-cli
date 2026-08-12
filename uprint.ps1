@@ -78,15 +78,15 @@ USAGE:
   uprint <command> [options]
 
 COMMANDS:
-  setup                 Interactive printer setup (run first!)
-  printers              List available printers
+  setup                 Select and save a default printer
+  printers              List printers installed in Windows
   status                Show printer status
-  print <file>          Print a file
+  print <file>          Submit a file to a print engine
   queue                 List print queue
   queue cancel <id>     Cancel a print job
   queue cancel --all    Cancel all print jobs
   health                Run diagnostic health check
-  config get [key]      Show configuration
+  config get            Show configuration
   config set <key> <v>  Set configuration value
 
 GLOBAL FLAGS:
@@ -94,11 +94,17 @@ GLOBAL FLAGS:
   --printer <name>      Target printer (default: $($config.defaultPrinter))
   --help                Show this help
 
+INSTALLED PRINTERS:
+  Run 'uprint printers' to discover printers installed in Windows.
+  Without --printer, commands use the configured default.
+  Use --printer <name> for another installed printer.
+  A printer not listed here must be installed in Windows first.
+
 EXAMPLES:
   uprint setup
   uprint printers --json
   uprint print report.pdf --printer Office-Printer-2
-  uprint queue cancel --all
+  uprint queue cancel 42
   uprint health --json
 "@
 
@@ -108,6 +114,172 @@ if ($Help -or -not $Command) {
             usage         = 'uprint <command> [options]'
             commands      = @('setup', 'printers', 'status', 'print', 'queue', 'health', 'config')
             globalOptions = @('--json', '--printer <name>', '--help')
+            commandDetails = @(
+                @{
+                    name                = 'setup-human'
+                    grammar             = @('uprint setup')
+                    options             = @()
+                    constraints         = @(
+                        'Interactive human terminal only.'
+                    )
+                    printerRequired     = $false
+                    mutates             = $true
+                    explicitUserRequest = $true
+                },
+                @{
+                    name                = 'setup-json'
+                    grammar             = @(
+                        'uprint setup --printer <name> --json'
+                    )
+                    options             = @('--printer <name>', '--json')
+                    constraints         = @(
+                        'An explicit printer is required.',
+                        'This is the noninteractive agent setup flow.'
+                    )
+                    printerRequired     = $true
+                    mutates             = $true
+                    explicitUserRequest = $true
+                },
+                @{
+                    name                = 'printers'
+                    grammar             = @(
+                        'uprint printers [--universal-only|-u]'
+                    )
+                    options             = @('--universal-only', '-u')
+                    constraints         = @(
+                        'Lists printers installed in Windows.'
+                    )
+                    printerRequired     = $false
+                    mutates             = $false
+                    explicitUserRequest = $false
+                },
+                @{
+                    name                = 'status'
+                    grammar             = @('uprint status')
+                    options             = @()
+                    constraints         = @()
+                    printerRequired     = $true
+                    mutates             = $false
+                    explicitUserRequest = $false
+                },
+                @{
+                    name                = 'print'
+                    grammar             = @(
+                        'uprint print <file> [--copies <count>] [--duplex] [--color|--mono]'
+                    )
+                    options             = @(
+                        '--copies <count>',
+                        '--duplex',
+                        '--color',
+                        '--mono'
+                    )
+                    constraints         = @(
+                        'copies must be a positive integer.',
+                        '--color and --mono are mutually exclusive.'
+                    )
+                    printerRequired     = $true
+                    mutates             = $true
+                    explicitUserRequest = $true
+                },
+                @{
+                    name                = 'queue-list'
+                    grammar             = @('uprint queue')
+                    options             = @()
+                    constraints         = @()
+                    printerRequired     = $true
+                    mutates             = $false
+                    explicitUserRequest = $false
+                },
+                @{
+                    name                = 'queue-cancel-one'
+                    grammar             = @(
+                        'uprint queue cancel <job-id>'
+                    )
+                    options             = @()
+                    constraints         = @(
+                        'job-id must be a positive integer.'
+                    )
+                    printerRequired     = $true
+                    mutates             = $true
+                    explicitUserRequest = $true
+                },
+                @{
+                    name                = 'queue-cancel-all'
+                    grammar             = @(
+                        'uprint queue cancel --all'
+                    )
+                    options             = @('--all')
+                    constraints         = @(
+                        'The user must explicitly request cancellation of all jobs.'
+                    )
+                    printerRequired     = $true
+                    mutates             = $true
+                    explicitUserRequest = $true
+                },
+                @{
+                    name                = 'health'
+                    grammar             = @('uprint health')
+                    options             = @()
+                    constraints         = @()
+                    printerRequired     = $true
+                    mutates             = $false
+                    explicitUserRequest = $false
+                },
+                @{
+                    name                = 'config-get'
+                    grammar             = @(
+                        'uprint config',
+                        'uprint config get'
+                    )
+                    options             = @()
+                    constraints         = @(
+                        'A key argument is not accepted.'
+                    )
+                    printerRequired     = $false
+                    mutates             = $false
+                    explicitUserRequest = $false
+                },
+                @{
+                    name                = 'config-set'
+                    grammar             = @(
+                        'uprint config set <key> <value>'
+                    )
+                    options             = @()
+                    constraints         = @(
+                        'key must be defaultPrinter, autoWake, timeout, or jsonOutput.'
+                    )
+                    printerRequired     = $false
+                    mutates             = $true
+                    explicitUserRequest = $true
+                }
+            )
+            exitCodes = @{
+                '0' = 'success'
+                '1' = 'operational-error'
+                '3' = 'invalid-input'
+            }
+            submissionStates = @{
+                submitted = 'Submitted to a non-Universal-Print engine without an observed error.'
+                submitted_to_cloud = 'Submitted to Universal Print and may require badge release.'
+                physicalOutputObserved = $false
+            }
+            printerSelection = @{
+                scope    = 'installed-printers-only'
+                default  = 'configuration.defaultPrinter'
+                override = '--printer <name>'
+                discover = 'uprint printers --json'
+            }
+            agentRules = @{
+                jsonOption = '--json'
+                noninteractiveSetup = 'uprint setup --printer <name> --json'
+                mutationsRequireExplicitUserRequest = $true
+                cancelAllRequiresExplicitAllJobsRequest = $true
+                submissionSuccess = @{
+                    exitCode       = 0
+                    envelopeSuccess = $true
+                    statuses       = @('submitted', 'submitted_to_cloud')
+                }
+            }
         }
         Format-UPrintOutput -Command 'help' -Data $helpData -Json
     } else {
